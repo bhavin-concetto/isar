@@ -4,9 +4,7 @@ part 'type_models.g.dart';
 
 @collection
 class BoolModel {
-  BoolModel(this.id);
-
-  final int id;
+  Id? id;
 
   bool value = false;
 
@@ -19,9 +17,7 @@ class BoolModel {
 
 @collection
 class ByteModel {
-  ByteModel(this.id);
-
-  final int id;
+  Id? id;
 
   byte value = 0;
 
@@ -32,9 +28,7 @@ class ByteModel {
 
 @collection
 class ShortModel {
-  ShortModel(this.id);
-
-  final int id;
+  Id? id;
 
   short value = 0;
 
@@ -47,9 +41,7 @@ class ShortModel {
 
 @collection
 class IntModel {
-  IntModel(this.id);
-
-  final int id;
+  Id? id;
 
   int value = 0;
 
@@ -62,9 +54,7 @@ class IntModel {
 
 @collection
 class FloatModel {
-  FloatModel(this.id);
-
-  final int id;
+  Id? id;
 
   float value = 0;
 
@@ -77,9 +67,7 @@ class FloatModel {
 
 @collection
 class DoubleModel {
-  DoubleModel(this.id);
-
-  final int id;
+  Id? id;
 
   double value = 0;
 
@@ -92,9 +80,7 @@ class DoubleModel {
 
 @collection
 class DateTimeModel {
-  DateTimeModel(this.id);
-
-  final int id;
+  Id? id;
 
   DateTime value = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -107,9 +93,7 @@ class DateTimeModel {
 
 @collection
 class StringModel {
-  StringModel(this.id);
-
-  final int id;
+  Id? id;
 
   String value = '';
 
@@ -127,15 +111,14 @@ class EmbeddedModel {
   String? value;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       other is EmbeddedModel && other.value == value;
 }
 
 @collection
 class ObjectModel {
-  ObjectModel(this.id);
-
-  final int id;
+  Id? id;
 
   EmbeddedModel value = EmbeddedModel();
 
@@ -147,27 +130,24 @@ class ObjectModel {
 }
 
 enum TestEnum {
-  option1(1),
-  option2(2),
-  option3(3);
-
-  const TestEnum(this.value);
-
-  @enumValue
-  final int value;
+  option1,
+  option2,
+  option3;
 }
 
 @collection
 class EnumModel {
-  EnumModel(this.id);
+  Id? id;
 
-  final int id;
-
+  @Enumerated(EnumType.name)
   TestEnum value = TestEnum.option1;
 
+  @Enumerated(EnumType.name)
   TestEnum? nValue;
 
+  @Enumerated(EnumType.name)
   List<TestEnum> list = [];
 
+  @Enumerated(EnumType.name)
   List<TestEnum>? nList;
 }

@@ -6,7 +6,7 @@ import 'package:pub_app/ui/package_metadata.dart';
 import 'package:pub_app/ui/search.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
-  const SearchPage({super.key, required this.query});
+  const SearchPage({required this.query, super.key});
 
   final String query;
 
@@ -107,7 +107,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 }
 
 class SearchResult extends ConsumerWidget {
-  const SearchResult({super.key, required this.name});
+  const SearchResult({required this.name, super.key});
 
   final String name;
 
@@ -149,7 +149,7 @@ class SearchResult extends ConsumerWidget {
                     package?.dart == true) ...[
                   const SizedBox(height: 12),
                   Platforms(package: package!, compact: true),
-                ]
+                ],
               ],
             ),
           ),

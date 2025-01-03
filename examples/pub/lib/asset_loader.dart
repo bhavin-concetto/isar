@@ -44,7 +44,8 @@ Future<void> loadAssets(PackageAndVersion p) async {
           kind: AssetKind.readme,
           content: content,
         );
-      } else if (changelog == null && entry.name.toLowerCase() == 'changelog.md') {
+      } else if (changelog == null &&
+          entry.name.toLowerCase() == 'changelog.md') {
         final content = await entry.contents.transform(utf8.decoder).join();
         changelog = Asset(
           package: p.package,

@@ -10,8 +10,8 @@ import 'package:pub_app/ui/package_versions.dart';
 
 class DetailPage extends ConsumerWidget {
   const DetailPage({
-    super.key,
     required this.name,
+    super.key,
     this.version,
   });
 
@@ -55,7 +55,7 @@ class DetailPage extends ConsumerWidget {
 }
 
 class PackageBody extends StatefulWidget {
-  const PackageBody({super.key, required this.package});
+  const PackageBody({required this.package, super.key});
 
   final Package package;
 
@@ -142,10 +142,10 @@ enum _BodyPage {
 
 class PackageAsset extends ConsumerWidget {
   const PackageAsset({
-    super.key,
     required this.name,
     required this.version,
     required this.kind,
+    super.key,
   });
 
   final String name;

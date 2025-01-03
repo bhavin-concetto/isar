@@ -5,7 +5,7 @@ import 'package:pub_app/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PackageVersions extends ConsumerWidget {
-  const PackageVersions({super.key, required this.name});
+  const PackageVersions({required this.name, super.key});
 
   final String name;
 
@@ -36,14 +36,14 @@ class PackageVersions extends ConsumerWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(timeago.format(version.published))
+                    Text(timeago.format(version.published)),
                   ],
                 ),
               ),
             ),
           ),
           const Divider(),
-        ]
+        ],
       ],
     );
   }

@@ -108,7 +108,7 @@ class Favorites extends ConsumerWidget {
 }
 
 class PackageCard extends ConsumerWidget {
-  const PackageCard({super.key, required this.name});
+  const PackageCard({required this.name, super.key});
 
   final String name;
 

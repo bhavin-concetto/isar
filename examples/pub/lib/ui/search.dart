@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class Search extends StatefulWidget {
-  const Search({super.key, required this.onSearch, this.query});
+  const Search({required this.onSearch, super.key, this.query});
 
   final String? query;
   final void Function(String query) onSearch;
@@ -89,7 +89,7 @@ class _SearchState extends State<Search> {
               ),
             ),
           ),
-        )
+        ),
       ],
     );
   }

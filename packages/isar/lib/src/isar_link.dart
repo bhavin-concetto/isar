@@ -86,7 +86,6 @@ abstract class IsarLinks<OBJ> implements IsarLinkBase<OBJ>, Set<OBJ> {
   @override
   void loadSync({bool overrideChanges = true});
 
-
   /// {@template links_update}
   /// Creates and removes the specified links in the database.
   ///

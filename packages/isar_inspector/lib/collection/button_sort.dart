@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 
 class SortButtons extends StatelessWidget {
   const SortButtons({
+    super.key,
     required this.properties,
-    required this.selectedProperty,
+    required this.property,
     required this.asc,
     required this.onChanged,
-    super.key,
   });
 
-  final List<String> properties;
-  final String selectedProperty;
+  final List<PropertySchema> properties;
+  final String property;
   final bool asc;
   final void Function(String property, bool asc) onChanged;
 
@@ -26,12 +27,13 @@ class SortButtons extends StatelessWidget {
               isDense: true,
               items: [
                 for (final property in properties)
-                  DropdownMenuItem(
-                    value: property,
-                    child: Text(property),
-                  ),
+                  if (property.type != IsarType.object && !property.type.isList)
+                    DropdownMenuItem(
+                      value: property.name,
+                      child: Text(property.name),
+                    ),
               ],
-              value: selectedProperty,
+              value: property,
               onChanged: (value) {
                 if (value != null) {
                   onChanged(value, asc);
@@ -44,7 +46,7 @@ class SortButtons extends StatelessWidget {
         ActionChip(
           label: Text(asc ? 'Asc' : 'Desc'),
           onPressed: () {
-            onChanged(selectedProperty, !asc);
+            onChanged(property, !asc);
           },
           tooltip: 'Toggle sort order',
         ),

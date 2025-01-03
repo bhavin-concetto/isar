@@ -4,66 +4,22 @@ import 'package:test/test.dart';
 
 part 'enum_test.g.dart';
 
-enum IndexEnum {
-  option1,
-  option2,
-  option3;
-}
+enum TestEnum {
+  option1(1, 1, 1, 'test1'),
+  option2(2, 2, 2, 'test2'),
+  option3(3, 3, 3, 'test3');
 
-enum ByteEnum {
-  option1(1),
-  option2(2),
-  option3(3);
+  const TestEnum(
+    this.byteVal,
+    this.shortVal,
+    this.intVal,
+    this.stringVal,
+  );
 
-  const ByteEnum(this.value);
-
-  @enumValue
-  final byte value;
-}
-
-enum ByteEnum2 {
-  option1(2),
-  option2(4),
-  option3(6),
-  option4(8);
-
-  const ByteEnum2(this.value);
-
-  @enumValue
-  final byte value;
-}
-
-enum ShortEnum {
-  option1(5),
-  option2(6),
-  option3(77);
-
-  const ShortEnum(this.value);
-
-  @enumValue
-  final short value;
-}
-
-enum IntEnum {
-  option1(-1),
-  option2(0),
-  option3(1);
-
-  const IntEnum(this.value);
-
-  @enumValue
-  final int value;
-}
-
-enum StringEnum {
-  option1('a'),
-  option2('b'),
-  option3('c');
-
-  const StringEnum(this.value);
-
-  @enumValue
-  final String value;
+  final byte byteVal;
+  final short shortVal;
+  final int intVal;
+  final String stringVal;
 }
 
 @collection
@@ -71,39 +27,79 @@ class EnumModel {
   EnumModel(
     this.id,
     this.ordinalEnum,
+    this.nameEnum,
     this.byteEnum,
     this.shortEnum,
     this.intEnum,
     this.stringEnum,
   );
 
-  final int id;
+  EnumModel.test(TestEnum value)
+      : id = Isar.autoIncrement,
+        ordinalEnum = value,
+        nameEnum = value,
+        byteEnum = value,
+        shortEnum = value,
+        intEnum = value,
+        stringEnum = value;
 
-  final IndexEnum ordinalEnum;
+  static final model1 = EnumModel.test(TestEnum.option1);
+  static final model2 = EnumModel.test(TestEnum.option2);
+  static final model3 = EnumModel.test(TestEnum.option3);
 
-  final ByteEnum byteEnum;
+  final Id id;
 
-  final ShortEnum shortEnum;
+  @enumerated
+  final TestEnum ordinalEnum;
 
-  final IntEnum intEnum;
+  @Enumerated(EnumType.name)
+  final TestEnum nameEnum;
 
-  final StringEnum stringEnum;
+  @Enumerated(EnumType.value, 'byteVal')
+  final TestEnum byteEnum;
+
+  @Enumerated(EnumType.value, 'shortVal')
+  final TestEnum shortEnum;
+
+  @Enumerated(EnumType.value, 'intVal')
+  final TestEnum intEnum;
+
+  @Enumerated(EnumType.value, 'stringVal')
+  final TestEnum stringEnum;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       other is EnumModel &&
       other.ordinalEnum == ordinalEnum &&
+      other.nameEnum == nameEnum &&
       other.byteEnum == byteEnum &&
       other.shortEnum == shortEnum &&
       other.intEnum == intEnum &&
       other.stringEnum == stringEnum;
+
+  @override
+  String toString() {
+    return '''EnumModel{ordinalEnum: $ordinalEnum, nameEnum: $nameEnum, byteEnum: $byteEnum, shortEnum: $shortEnum, intEnum: $intEnum, stringEnum: $stringEnum}''';
+  }
 }
 
 void main() {
   group('Enum', () {
     isarTest('Verify property types', () {});
 
-    isarTest('.get() / .put()', () async {});
+    isarTest('.get() / .put()', () async {
+      final isar = await openTempIsar([EnumModelSchema]);
+      await isar.tWriteTxn(() async {
+        await isar.enumModels
+            .tPutAll([EnumModel.model1, EnumModel.model2, EnumModel.model3]);
+      });
+
+      await qEqual(
+        isar.enumModels.where(),
+        [EnumModel.model1, EnumModel.model2, EnumModel.model3],
+      );
+    });
 
     isarTest('DateTime Enum', () {});
 

@@ -1,6 +1,3 @@
-@TestOn('vm')
-library;
-
 import 'dart:io';
 
 import 'package:isar/isar.dart';
@@ -11,13 +8,12 @@ part 'compact_on_launch_test.g.dart';
 
 @Collection()
 class Model {
-  Model(this.id);
-
-  final int id;
+  Id id = Isar.autoIncrement;
 
   List<int> buffer = List.filled(16000, 42);
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Model &&
@@ -34,129 +30,124 @@ class Model {
 void main() {
   group('Compact on launch', () {
     late Isar isar;
-    late final isarName = getRandomName();
     late File file;
 
     setUp(() async {
-      isar = await openTempIsar([ModelSchema], name: isarName);
-      if (isSQLite) {
-        file = File('${isar.directory}/$isarName.sqlite');
-      } else {
-        file = File('${isar.directory}/$isarName.isar');
-      }
+      isar = await openTempIsar([ModelSchema]);
+      file = File(isar.path!);
 
-      isar.write(
-        (isar) => isar.models.putAll(List.generate(100, Model.new)),
+      await isar.tWriteTxn(
+        () => isar.models.tPutAll(List.filled(100, Model())),
       );
     });
 
-    isarTest('No compact on launch', () async {
-      isar.close();
+    isarTestVm('No compact on launch', () async {
+      await isar.close();
       final size1 = file.lengthSync();
 
-      isar = await openTempIsar([ModelSchema], name: isarName);
-      isar.write((isar) => isar.models.where().deleteAll(limit: 50));
-      isar.close();
+      isar = await openTempIsar([ModelSchema], name: isar.name);
+      await isar.tWriteTxn(() => isar.models.where().limit(50).tDeleteAll());
+      await isar.close();
 
       final size2 = file.lengthSync();
 
-      isar = await openTempIsar([ModelSchema], name: isarName);
+      isar = await openTempIsar([ModelSchema], name: isar.name);
 
       expect(size1, size2);
     });
 
-    isarTest('minFileSize', sqlite: false, () async {
-      isar.close();
+    isarTestVm('minFileSize', () async {
+      await isar.close();
       final size1 = file.lengthSync();
 
-      isar = await openTempIsar([ModelSchema], name: isarName);
-      isar.write((isar) => isar.models.where().deleteAll(limit: 50));
-      isar.close();
+      isar = await openTempIsar([ModelSchema], name: isar.name);
+      await isar.tWriteTxn(() => isar.models.where().limit(50).tDeleteAll());
+      await isar.close();
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: CompactCondition(minFileSize: size1 * 2),
       );
-      isar.close();
+      await isar.close();
       final size2 = file.lengthSync();
       expect(size1, size2);
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: CompactCondition(minFileSize: size1 ~/ 2),
       );
       final size3 = file.lengthSync();
       expect(size3, lessThan(size2));
     });
 
-    isarTest('minBytes', sqlite: false, () async {
-      isar.close();
+    isarTestVm('minBytes', () async {
+      await isar.close();
       final size1 = file.lengthSync();
 
-      isar = await openTempIsar([ModelSchema], name: isarName);
-      isar.write((isar) => isar.models.where().deleteAll(limit: 10));
-      isar.close();
+      isar = await openTempIsar([ModelSchema], name: isar.name);
+      await isar.tWriteTxn(() => isar.models.where().limit(10).tDeleteAll());
+      await isar.close();
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: CompactCondition(minBytes: size1 ~/ 2),
       );
-      isar.close();
+      await isar.close();
       final size2 = file.lengthSync();
       expect(size1, size2);
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: CompactCondition(minBytes: size1 ~/ 2),
       );
-      isar.write((isar) => isar.models.where().deleteAll(limit: 90));
-      isar.close();
+      await isar.tWriteTxn(() => isar.models.where().limit(80).tDeleteAll());
+      await isar.close();
       final size3 = file.lengthSync();
       expect(size3, size2);
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: CompactCondition(minBytes: size1 ~/ 2),
       );
       final size4 = file.lengthSync();
       expect(size4, lessThan(size3));
     });
 
-    isarTest('minRatio', sqlite: false, () async {
-      isar.close();
+    isarTestVm('minRatio', () async {
+      await isar.close();
       final size1 = file.lengthSync();
 
-      isar = await openTempIsar([ModelSchema], name: isarName);
-      isar.write((isar) => isar.models.where().deleteAll(limit: 10));
-      isar.close();
+      isar = await openTempIsar([ModelSchema], name: isar.name);
+      await isar.tWriteTxn(() => isar.models.where().limit(10).tDeleteAll());
+      await isar.close();
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: const CompactCondition(minRatio: 2),
       );
-      isar.close();
+      await isar.close();
       final size2 = file.lengthSync();
       expect(size1, size2);
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: const CompactCondition(minRatio: 2),
       );
-      isar.write((isar) => isar.models.where().deleteAll(limit: 80));
-      isar.close();
+      await isar.tWriteTxn(() => isar.models.where().limit(80).tDeleteAll());
+      await isar.close();
       final size3 = file.lengthSync();
       expect(size3, size2);
 
       isar = await openTempIsar(
         [ModelSchema],
-        name: isarName,
+        name: isar.name,
         compactOnLaunch: const CompactCondition(minRatio: 2),
       );
       final size4 = file.lengthSync();

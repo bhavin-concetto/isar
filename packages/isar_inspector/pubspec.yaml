@@ -2,14 +2,15 @@ name: isar_inspector
 publish_to: "none"
 version: 1.0.0+1
 
+resolution: workspace 
 environment:
-  sdk: ">=3.1.0 <4.0.0"
+  sdk: ^3.6.0
   flutter: ">=3.3.0"
 
 dependencies:
   clickup_fading_scroll:
     git:
-      url: https://github.com/clickup/clickup_fading_scroll
+      url: https://github.com/clickup/clickup_fading_scroll.git
   flutter:
     sdk: flutter
   flutter_svg: any
@@ -18,7 +19,7 @@ dependencies:
   google_fonts: ^6.2.1
   isar:
     path: ../isar
-  vm_service: ^15.0.0
+  vm_service: 14.3.0
   web_socket_channel: ^3.0.1
 
 dev_dependencies:

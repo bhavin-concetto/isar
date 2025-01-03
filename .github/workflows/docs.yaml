@@ -18,7 +18,8 @@ jobs:
   build_docs:
     name: Build and deploy Docs
     runs-on: ubuntu-latest
-    environment:
+   resolution: workspace 
+environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:

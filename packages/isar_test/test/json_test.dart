@@ -1,24 +1,28 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:isar/isar.dart';
+import 'package:isar_test/isar_test.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('JSON', () {
-    //late Isar isar;
-
+    late Isar isar;
     setUp(() async {
-      //isar = await openTempIsar([TweetSchema]);
+      isar = await openTempIsar([TweetSchema]);
     });
 
-    /*test('Import', () {
-      isar.write((isar) {
-        isar.tweets.importJson([tweetJson]);
+    test('Import / Export', () async {
+      await isar.tWriteTxn(() async {
+        await isar.tweets.tImportJson([tweetJson]);
       });
 
-      //expect(isar.tweets.where().findAll(), [tweetJson]);
-    });*/
+      expect(await isar.tweets.where().exportJson(), [tweetJson]);
+    });
 
-    /*test('Import / Export raw', () async {
+    test('Import / Export raw', () async {
       final bytes = JsonUtf8Encoder().convert([tweetJson]);
-      await isar.write((isar) async {
+      await isar.tWriteTxn(() async {
         await isar.tweets.tImportJsonRaw(Uint8List.fromList(bytes));
       });
 
@@ -28,17 +32,17 @@ void main() {
     });
 
     test('Import raw malformed', () async {
-      final i1 = isar.write((isar) async {
+      final i1 = isar.tWriteTxn(() async {
         await isar.tweets.tImportJsonRaw(Uint8List(0));
       });
       await expectLater(() => i1, throwsIsarError());
 
-      final i2 = isar.write((isar) async {
+      final i2 = isar.tWriteTxn(() async {
         final bytes = JsonUtf8Encoder().convert({});
         await isar.tweets.tImportJsonRaw(Uint8List.fromList(bytes));
       });
       await expectLater(() => i2, throwsIsarError());
-    });*/
+    });
   });
 }
 

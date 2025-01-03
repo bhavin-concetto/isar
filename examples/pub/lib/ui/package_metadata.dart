@@ -8,7 +8,7 @@ import 'package:pub_app/ui/publisher.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PackageHeader extends ConsumerWidget {
-  const PackageHeader({super.key, required this.package});
+  const PackageHeader({required this.package, super.key});
 
   final Package package;
 
@@ -53,14 +53,14 @@ class PackageHeader extends ConsumerWidget {
               color: theme.colorScheme.onSurface.withOpacity(0.9),
             ),
           ),
-        ]
+        ],
       ],
     );
   }
 }
 
 class Platforms extends StatelessWidget {
-  const Platforms({super.key, required this.package, this.compact = false});
+  const Platforms({required this.package, super.key, this.compact = false});
 
   final Package package;
   final bool compact;
@@ -71,7 +71,7 @@ class Platforms extends StatelessWidget {
     final platforms = package.platforms?.map((e) => e.name).toList()?..sort();
     final sdks = [
       if (package.dart == true) 'DART',
-      if (package.flutter == true) 'FLUTTER'
+      if (package.flutter == true) 'FLUTTER',
     ];
     return Wrap(
       spacing: 5,
@@ -114,8 +114,8 @@ class Platforms extends StatelessWidget {
 
 class Scores extends ConsumerWidget {
   const Scores({
-    super.key,
     required this.package,
+    super.key,
     this.alwaysShowLatest = false,
   });
 
@@ -177,7 +177,7 @@ class Scores extends ConsumerWidget {
                 for (var i = 0; i < widgets.length; i++) ...[
                   if (i != 0) const VerticalDivider(thickness: 1, width: 0),
                   widgets[i],
-                ]
+                ],
               ],
             ),
           ),
@@ -189,9 +189,9 @@ class Scores extends ConsumerWidget {
 
 class ScoreItem extends StatelessWidget {
   const ScoreItem({
-    super.key,
     required this.stat,
     required this.title,
+    super.key,
     this.onTap,
   });
 

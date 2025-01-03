@@ -9,8 +9,7 @@ part 'multi_filter_test.g.dart';
 @collection
 class Model {
   Model(this.id, this.value);
-
-  final int id;
+  final Id id;
 
   @Index()
   final int value;
@@ -36,182 +35,317 @@ void main() {
       model1 = Model(1, 1);
       model2 = Model(2, 2);
       model3 = Model(3, 3);
-
       isar = await openTempIsar([ModelSchema]);
-      isar.write((isar) {
+      await isar.writeTxn(() {
         return isar.models.putAll([model0, model1, model2, model3]);
       });
     });
 
+    group('where anyOf', () {
+      isarTest('zero elements', () async {
+        final q = isar.models.where().anyOf(
+          <int>[],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model0, model1, model2, model3]);
+      });
+
+      isarTest('one matching element', () async {
+        final q = isar.models.where().anyOf(
+          [2],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model2]);
+      });
+
+      isarTest('two matching elements', () async {
+        final q = isar.models.where().anyOf(
+          [0, 2],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model0, model2]);
+      });
+
+      isarTest('one non-matching element', () async {
+        final q = isar.models.where().anyOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, []);
+      });
+
+      isarTest('one matching and one non-matching elements', () async {
+        final q = isar.models.where().anyOf(
+          [7, 3],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model3]);
+      });
+
+      isarTest('one non-matching element', () async {
+        final q = isar.models.where().anyOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, []);
+      });
+    });
+
     group('filter anyOf', () {
-      isarTest('zero elements', () {
-        final q = isar.models.where().anyOf(
+      isarTest('zero elements', () async {
+        final q = isar.models.filter().anyOf(
           <int>[],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, [model0, model1, model2, model3]);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           <int>[],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
 
-      isarTest('one matching element', () {
-        final q = isar.models.where().anyOf(
+      isarTest('one matching element', () async {
+        final q = isar.models.filter().anyOf(
           [2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model2]);
+        await qEqual(q, [model2]);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           [2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model3]);
+        await qEqual(notQ, [model0, model1, model3]);
       });
 
-      isarTest('two matching elements', () {
-        final q = isar.models.where().anyOf(
+      isarTest('two matching elements', () async {
+        final q = isar.models.filter().anyOf(
           [0, 2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model0, model2]);
+        await qEqual(q, [model0, model2]);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           [0, 2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model1, model3]);
+        await qEqual(notQ, [model1, model3]);
       });
 
-      isarTest('one non-matching element', () {
-        final q = isar.models.where().anyOf(
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().anyOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, []);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
 
-      isarTest('one matching and one non-matching elements', () {
-        final q = isar.models.where().anyOf(
+      isarTest('one matching and one non-matching elements', () async {
+        final q = isar.models.filter().anyOf(
           [7, 3],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model3]);
+        await qEqual(q, [model3]);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           [7, 3],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2]);
+        await qEqual(notQ, [model0, model1, model2]);
       });
 
-      isarTest('one non-matching element', () {
-        final q = isar.models.where().anyOf(
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().anyOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, []);
 
-        final notQ = isar.models.where().not().anyOf(
+        final notQ = isar.models.filter().not().anyOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
     });
 
     group('filter allOf', () {
-      isarTest('zero elements', () {
-        final q = isar.models.where().allOf(
+      isarTest('zero elements', () async {
+        final q = isar.models.filter().allOf(
           <int>[],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model0, model1, model2, model3]);
+        await qEqual(q, [model0, model1, model2, model3]);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           <int>[],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), isEmpty);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
 
-      isarTest('one matching element', () {
-        final q = isar.models.where().allOf(
+      isarTest('one matching element', () async {
+        final q = isar.models.filter().allOf(
           [2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model2]);
+        await qEqual(q, [model2]);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           [2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model3]);
+        await qEqual(notQ, [model0, model1, model3]);
       });
 
-      isarTest('two matching elements', () {
-        final q = isar.models.where().allOf(
+      isarTest('two matching elements', () async {
+        final q = isar.models.filter().allOf(
           [2, 2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), [model2]);
+        await qEqual(q, [model2]);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           [2, 2],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model3]);
+        await qEqual(notQ, [model0, model1, model3]);
       });
 
-      isarTest('one non-matching element', () {
-        final q = isar.models.where().allOf(
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().allOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, []);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
 
-      isarTest('one matching and one non-matching elements', () {
-        final q = isar.models.where().allOf(
+      isarTest('one matching and one non-matching elements', () async {
+        final q = isar.models.filter().allOf(
           [7, 3],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, []);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           [7, 3],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
 
-      isarTest('one non-matching element', () {
-        final q = isar.models.where().allOf(
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().allOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(q.findAll(), isEmpty);
+        await qEqual(q, []);
 
-        final notQ = isar.models.where().not().allOf(
+        final notQ = isar.models.filter().not().allOf(
           [5],
           (q, int element) => q.valueEqualTo(element),
         );
-        expect(notQ.findAll(), [model0, model1, model2, model3]);
+        await qEqual(notQ, [model0, model1, model2, model3]);
+      });
+    });
+
+    group('filter oneOf', () {
+      isarTest('zero elements', () async {
+        final q = isar.models.filter().oneOf(
+          <int>[],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model0, model1, model2, model3]);
+
+        final notQ = isar.models.filter().not().oneOf(
+          <int>[],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model2, model3]);
+      });
+
+      isarTest('one matching element', () async {
+        final q = isar.models.filter().oneOf(
+          [2],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model2]);
+
+        final notQ = isar.models.filter().not().oneOf(
+          [2],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model3]);
+      });
+
+      isarTest('two matching elements', () async {
+        final q = isar.models.filter().oneOf(
+          [2, 2, 3],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model3]);
+
+        final notQ = isar.models.filter().not().oneOf(
+          [2, 2, 3],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model2]);
+      });
+
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().oneOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, []);
+
+        final notQ = isar.models.filter().not().oneOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model2, model3]);
+      });
+
+      isarTest('one matching and one non-matching elements', () async {
+        final q = isar.models.filter().oneOf(
+          [7, 3],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, [model3]);
+
+        final notQ = isar.models.filter().not().oneOf(
+          [7, 3],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model2]);
+      });
+
+      isarTest('one non-matching element', () async {
+        final q = isar.models.filter().oneOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(q, []);
+
+        final notQ = isar.models.filter().not().oneOf(
+          [5],
+          (q, int element) => q.valueEqualTo(element),
+        );
+        await qEqual(notQ, [model0, model1, model2, model3]);
       });
     });
   });

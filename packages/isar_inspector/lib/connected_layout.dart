@@ -8,28 +8,28 @@ import 'package:isar_inspector/sidebar.dart';
 
 class ConnectedLayout extends StatefulWidget {
   const ConnectedLayout({
+    super.key,
     required this.client,
     required this.instances,
-    super.key,
+    required this.collections,
   });
 
   final ConnectClient client;
   final List<String> instances;
+  final List<CollectionSchema<dynamic>> collections;
 
   @override
   State<ConnectedLayout> createState() => _ConnectedLayoutState();
 }
 
 class _ConnectedLayoutState extends State<ConnectedLayout> {
+  late String selectedInstance;
+  late String selectedCollection = widget.collections.first.name;
   late StreamSubscription<void> infoSubscription;
-
-  String? selectedInstance;
-  String? selectedCollection;
-  final List<IsarSchema> schemas = [];
 
   @override
   void initState() {
-    _selectInstance(widget.instances.firstOrNull);
+    _selectInstance(widget.instances.first);
     infoSubscription = widget.client.collectionInfoChanged.listen((_) {
       setState(() {});
     });
@@ -37,9 +37,9 @@ class _ConnectedLayoutState extends State<ConnectedLayout> {
   }
 
   @override
-  void didUpdateWidget(ConnectedLayout oldWidget) {
+  void didUpdateWidget(covariant ConnectedLayout oldWidget) {
     if (!widget.instances.contains(selectedInstance)) {
-      _selectInstance(widget.instances.firstOrNull);
+      _selectInstance(widget.instances.first);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -50,27 +50,9 @@ class _ConnectedLayoutState extends State<ConnectedLayout> {
     super.dispose();
   }
 
-  void _selectInstance(String? instance) {
-    if (instance == selectedInstance) {
-      return;
-    }
-
+  void _selectInstance(String instance) {
     selectedInstance = instance;
-    selectedCollection = null;
-    schemas.clear();
-
-    if (instance != null) {
-      widget.client.watchInstance(instance);
-      widget.client.getSchemas(instance).then((newSchemas) {
-        if (mounted && selectedInstance == instance) {
-          setState(() {
-            schemas.addAll(newSchemas);
-            selectedCollection =
-                schemas.where((e) => !e.embedded).firstOrNull?.name;
-          });
-        }
-      });
-    }
+    widget.client.watchInstance(instance);
   }
 
   @override
@@ -90,7 +72,7 @@ class _ConnectedLayoutState extends State<ConnectedLayout> {
                   _selectInstance(instance);
                 });
               },
-              schemas: schemas,
+              collections: widget.collections,
               collectionInfo: widget.client.collectionInfo,
               selectedCollection: selectedCollection,
               onCollectionSelected: (collection) {
@@ -101,18 +83,22 @@ class _ConnectedLayoutState extends State<ConnectedLayout> {
             ),
           ),
           const SizedBox(width: 25),
-          if (selectedInstance != null && selectedCollection != null)
-            Expanded(
-              child: CollectionArea(
-                key: Key('$selectedInstance.$selectedCollection'),
-                instance: selectedInstance!,
-                collection: selectedCollection!,
-                client: widget.client,
-                schemas: {
-                  for (final schema in schemas) schema.name: schema,
-                },
-              ),
+          Expanded(
+            child: CollectionArea(
+              key: Key('$selectedInstance.$selectedCollection'),
+              instance: selectedInstance,
+              collection: selectedCollection,
+              client: widget.client,
+              schemas: {
+                for (final schema in widget.collections) ...{
+                  schema.name: schema,
+                  for (final embedded in schema.embeddedSchemas.values) ...{
+                    embedded.name: embedded,
+                  }
+                }
+              },
             ),
+          )
         ],
       ),
     );

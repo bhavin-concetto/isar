@@ -1,0 +1,20 @@
+name: _
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+workspace:
+  - packages/isar
+  - packages/isar_flutter_libs
+  - packages/isar_generator
+  - packages/isar_inspector
+  - packages/isar_test
+  - examples/pub
+
+#dependency_overrides:
+#  isar:
+#    path: packages/isar
+#  isar_flutter_libs:
+#    path: packages/isar_flutter_libs
+#  isar_generator:
+#    path: packages/isar_generator

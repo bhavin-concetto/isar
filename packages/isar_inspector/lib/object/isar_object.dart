@@ -1,5 +1,7 @@
 class IsarObject {
-  const IsarObject(this.data);
+  const IsarObject(
+    this.data,
+  );
 
   final Map<String, dynamic> data;
 

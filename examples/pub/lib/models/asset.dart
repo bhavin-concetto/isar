@@ -9,14 +9,23 @@ class Asset {
     required this.version,
     required this.kind,
     required this.content,
-  });
+  }) : id = Isar.autoIncrement;
 
-  String get id => '$package$version$kind';
+  Id id;
 
+  @Index(
+    unique: true,
+    replace: true,
+    composite: [
+      CompositeIndex('version'),
+      CompositeIndex('kind'),
+    ],
+  )
   final String package;
 
   final String version;
 
+  @enumerated
   final AssetKind kind;
 
   final String content;

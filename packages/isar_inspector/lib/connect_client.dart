@@ -19,7 +19,7 @@ class ConnectClient {
   final VmService vmService;
   final String isolateId;
 
-  final collectionInfo = <String, ConnectCollectionInfoPayload>{};
+  final collectionInfo = <String, ConnectCollectionInfo>{};
 
   final _instancesChangedController = StreamController<void>.broadcast();
   final _collectionInfoChangedController = StreamController<void>.broadcast();
@@ -52,7 +52,7 @@ class ConnectClient {
         client._instancesChangedController.add(null);
       },
       ConnectEvent.collectionInfoChanged.event: (Map<String, dynamic> json) {
-        final collectionInfo = ConnectCollectionInfoPayload.fromJson(json);
+        final collectionInfo = ConnectCollectionInfo.fromJson(json);
         client.collectionInfo[collectionInfo.collection] = collectionInfo;
         client._collectionInfoChangedController.add(null);
       },
@@ -68,16 +68,16 @@ class ConnectClient {
     return client;
   }
 
-  Future<Map<String, dynamic>?> _call(
+  Future<T> _call<T>(
     ConnectAction action, {
     Duration? timeout = kNormalTimeout,
-    dynamic param,
+    Map<String, dynamic>? args,
   }) async {
     var responseFuture = vmService.callServiceExtension(
       action.method,
       isolateId: isolateId,
       args: {
-        if (param != null) 'args': jsonEncode(param),
+        if (args != null) 'args': jsonEncode(args),
       },
     );
     if (timeout != null) {
@@ -85,64 +85,76 @@ class ConnectClient {
     }
 
     final response = await responseFuture;
-    return response.json?['result'] as Map<String, dynamic>?;
+    return response.json?['result'] as T;
   }
 
-  Future<List<IsarSchema>> getSchemas(String instance) async {
-    final json = await _call(
-      ConnectAction.getSchemas,
-      param: ConnectInstancePayload(instance),
-    );
-    return ConnectSchemasPayload.fromJson(json!).schemas;
+  Future<List<CollectionSchema<dynamic>>> getSchema() async {
+    final schema = await _call<List<dynamic>>(ConnectAction.getSchema);
+    return schema
+        .map(
+          (e) => CollectionSchema<dynamic>.fromJson(e as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   Future<List<String>> listInstances() async {
-    final json = await _call(ConnectAction.listInstances);
-    return ConnectInstanceNamesPayload.fromJson(json!).instances;
+    final instances = await _call<List<dynamic>>(ConnectAction.listInstances);
+    return instances.cast();
   }
 
   Future<void> watchInstance(String instance) async {
     collectionInfo.clear();
-    await _call(
+    await _call<dynamic>(
       ConnectAction.watchInstance,
-      param: ConnectInstancePayload(instance),
+      args: {'instance': instance},
     );
   }
 
-  Future<ConnectObjectsPayload> executeQuery(ConnectQueryPayload query) async {
-    final json = await _call(
+  Future<Map<String, Object?>> executeQuery(ConnectQuery query) async {
+    return _call<Map<String, Object?>>(
       ConnectAction.executeQuery,
-      param: query,
-      timeout: kLongTimeout,
-    );
-    return ConnectObjectsPayload.fromJson(json!);
-  }
-
-  Future<void> deleteQuery(ConnectQueryPayload query) async {
-    await _call(
-      ConnectAction.deleteQuery,
-      param: query,
+      args: query.toJson(),
       timeout: kLongTimeout,
     );
   }
 
-  Future<void> importJson(ConnectObjectsPayload objects) async {
-    await _call(ConnectAction.importJson, param: objects);
+  Future<void> removeQuery(ConnectQuery query) async {
+    await _call<dynamic>(
+      ConnectAction.removeQuery,
+      args: query.toJson(),
+      timeout: kLongTimeout,
+    );
   }
 
-  Future<ConnectObjectsPayload> exportJson(ConnectQueryPayload query) async {
-    final json = await _call(
+  Future<void> importJson(
+    String instance,
+    String collection,
+    List<dynamic> objects,
+  ) async {
+    await _call<dynamic>(
+      ConnectAction.importJson,
+      args: {
+        'instance': instance,
+        'collection': collection,
+        'objects': objects,
+      },
+    );
+  }
+
+  Future<List<dynamic>> exportJson(ConnectQuery query) async {
+    final data = await _call<List<dynamic>>(
       ConnectAction.exportJson,
-      param: query,
+      args: query.toJson(),
       timeout: kLongTimeout,
     );
-    return ConnectObjectsPayload.fromJson(json!);
+
+    return data.cast();
   }
 
-  Future<void> editProperty(ConnectEditPayload edit) async {
-    await _call(
+  Future<void> editProperty(ConnectEdit edit) async {
+    await _call<dynamic>(
       ConnectAction.editProperty,
-      param: edit,
+      args: edit.toJson(),
       timeout: kLongTimeout,
     );
   }

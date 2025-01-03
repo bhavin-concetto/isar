@@ -6,13 +6,14 @@ part 'filter_int_test.g.dart';
 
 @collection
 class IntModel {
-  IntModel(this.id, this.field);
+  IntModel(this.field);
 
-  final int id;
+  Id? id;
 
   short? field = 0;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) {
     return other is IntModel && id == other.id && other.field == field;
   }
@@ -21,7 +22,7 @@ class IntModel {
 void main() {
   group('Int filter', () {
     late Isar isar;
-    late IsarCollection<int, IntModel> col;
+    late IsarCollection<IntModel> col;
 
     late IntModel obj0;
     late IntModel obj1;
@@ -33,67 +34,75 @@ void main() {
       isar = await openTempIsar([IntModelSchema]);
       col = isar.intModels;
 
-      obj0 = IntModel(0, -1234);
-      obj1 = IntModel(1, 1);
-      obj2 = IntModel(2, 2);
-      obj3 = IntModel(3, 1);
-      objNull = IntModel(4, null);
+      objNull = IntModel(null);
+      obj0 = IntModel(-1234);
+      obj1 = IntModel(1);
+      obj2 = IntModel(2);
+      obj3 = IntModel(1);
 
-      isar.write((isar) {
-        isar.intModels.putAll([obj0, obj1, obj2, obj3, objNull]);
+      await isar.writeTxn(() async {
+        await isar.intModels.putAll([obj0, obj1, obj2, obj3, objNull]);
       });
     });
 
-    isarTest('.equalTo()', () {
-      expect(col.where().fieldEqualTo(2).findAll(), [obj2]);
-      expect(col.where().fieldEqualTo(null).findAll(), [objNull]);
-      expect(col.where().fieldEqualTo(5).findAll(), isEmpty);
+    isarTest('.equalTo()', () async {
+      await qEqual(col.filter().fieldEqualTo(2), [obj2]);
+      await qEqual(col.filter().fieldEqualTo(null), [objNull]);
+      await qEqual(col.filter().fieldEqualTo(5), []);
     });
 
-    isarTest('.greaterThan()', () {
-      expect(col.where().fieldGreaterThan(1).findAll(), [obj2]);
-      expect(
-        col.where().fieldGreaterThan(null).findAll(),
-        [obj0, obj1, obj2, obj3],
-      );
-      expect(col.where().fieldGreaterThan(4).findAll(), isEmpty);
-    });
-
-    isarTest('.greaterThanOrEqualTo()', () {
-      expect(
-        col.where().fieldGreaterThanOrEqualTo(1).findAll(),
+    isarTest('.greaterThan()', () async {
+      await qEqual(col.filter().fieldGreaterThan(1), [obj2]);
+      await qEqual(
+        col.filter().fieldGreaterThan(1, include: true),
         [obj1, obj2, obj3],
       );
-      expect(
-        col.where().fieldGreaterThanOrEqualTo(null).findAll(),
+      await qEqual(
+        col.filter().fieldGreaterThan(null),
+        [obj0, obj1, obj2, obj3],
+      );
+      await qEqual(
+        col.filter().fieldGreaterThan(null, include: true),
         [obj0, obj1, obj2, obj3, objNull],
       );
+      await qEqual(col.filter().fieldGreaterThan(4), []);
     });
 
-    isarTest('.lessThan()', () {
-      expect(col.where().fieldLessThan(1).findAll(), [obj0, objNull]);
-      expect(col.where().fieldLessThan(null).findAll(), isEmpty);
+    isarTest('.lessThan()', () async {
+      await qEqual(col.filter().fieldLessThan(1), [obj0, objNull]);
+      await qEqual(col.filter().fieldLessThan(null), []);
+      await qEqual(col.filter().fieldLessThan(null, include: true), [objNull]);
     });
 
-    isarTest('.lessThanOrEqualTo()', () {
-      expect(col.where().fieldLessThanOrEqualTo(null).findAll(), [objNull]);
-    });
-
-    isarTest('.between()', () {
-      expect(col.where().fieldBetween(1, 2).findAll(), [obj1, obj2, obj3]);
-      expect(
-        col.where().fieldBetween(null, 1).findAll(),
+    isarTest('.between()', () async {
+      await qEqual(col.filter().fieldBetween(1, 2), [obj1, obj2, obj3]);
+      await qEqual(
+        col.filter().fieldBetween(1, 2, includeLower: false),
+        [obj2],
+      );
+      await qEqual(
+        col.filter().fieldBetween(1, 2, includeUpper: false),
+        [obj1, obj3],
+      );
+      await qEqual(
+        col
+            .filter()
+            .fieldBetween(1, 2, includeLower: false, includeUpper: false),
+        [],
+      );
+      await qEqual(
+        col.filter().fieldBetween(null, 1),
         [obj0, obj1, obj3, objNull],
       );
-      expect(col.where().fieldBetween(5, 6).findAll(), isEmpty);
+      await qEqual(col.filter().fieldBetween(5, 6), []);
     });
 
-    isarTest('.isNull()', () {
-      expect(col.where().fieldIsNull().findAll(), [objNull]);
+    isarTest('.isNull()', () async {
+      await qEqual(col.filter().fieldIsNull(), [objNull]);
     });
 
-    isarTest('.isNotNull()', () {
-      expect(col.where().fieldIsNotNull().findAll(), [obj0, obj1, obj2, obj3]);
+    isarTest('.isNotNull()', () async {
+      await qEqual(col.filter().fieldIsNotNull(), [obj0, obj1, obj2, obj3]);
     });
   });
 }

@@ -8,34 +8,38 @@ import 'package:isar_inspector/object/object_view.dart';
 
 class ObjectsListSliver extends StatelessWidget {
   const ObjectsListSliver({
+    super.key,
     required this.instance,
     required this.collection,
     required this.schemas,
     required this.objects,
     required this.onUpdate,
     required this.onDelete,
-    super.key,
   });
 
   final String instance;
   final String collection;
-  final Map<String, IsarSchema> schemas;
+  final Map<String, Schema<dynamic>> schemas;
   final List<IsarObject> objects;
-  final void Function(dynamic id, String path, dynamic value) onUpdate;
-  final void Function(dynamic id) onDelete;
+  final void Function(
+    String collection,
+    int id,
+    String path,
+    dynamic value,
+  ) onUpdate;
+  final void Function(int id) onDelete;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final schema = schemas[collection]!;
+    final collectionSchema = schemas[collection]! as CollectionSchema;
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         childCount: objects.length,
         (BuildContext context, int index) {
           final object = objects[index];
-          final id = object.getValue(schema.idName!);
           return Card(
-            key: Key('object $id'),
+            key: Key('object ${object.getValue(collectionSchema.idName)}'),
             child: Padding(
               padding: const EdgeInsets.all(5),
               child: Stack(
@@ -46,7 +50,10 @@ class ObjectsListSliver extends StatelessWidget {
                       schemaName: collection,
                       schemas: schemas,
                       object: object,
-                      onUpdate: (path, value) => onUpdate(id, path, value),
+                      root: true,
+                      onUpdate: (collection, id, path, value) {
+                        onUpdate(collection, id!, path, value);
+                      },
                     ),
                   ),
                   Positioned(
@@ -61,10 +68,7 @@ class ObjectsListSliver extends StatelessWidget {
                           ),
                           tooltip: 'Copy as JSON',
                           visualDensity: VisualDensity.standard,
-                          onPressed: () {
-                            final json = jsonEncode(object.data);
-                            Clipboard.setData(ClipboardData(text: json));
-                          },
+                          onPressed: () => _copyObject(object),
                         ),
                         IconButton(
                           icon: Icon(
@@ -73,11 +77,14 @@ class ObjectsListSliver extends StatelessWidget {
                           ),
                           tooltip: 'Delete',
                           visualDensity: VisualDensity.standard,
-                          onPressed: () => onDelete(id),
+                          onPressed: () {
+                            final id = object.getValue(collectionSchema.idName);
+                            onDelete(id as int);
+                          },
                         ),
                       ],
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -85,5 +92,14 @@ class ObjectsListSliver extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void _copyObject(IsarObject object) {
+    final json = Map.of(object.data);
+    final schema = schemas[collection]! as CollectionSchema;
+    for (final linkName in schema.links.keys) {
+      json.remove(linkName);
+    }
+    Clipboard.setData(ClipboardData(text: jsonEncode(json)));
   }
 }

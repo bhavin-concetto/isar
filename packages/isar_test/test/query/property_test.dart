@@ -25,296 +25,287 @@ void main() {
       ]);
     });
 
-    isarTest('id property', () {
-      isar.write(
-        (isar) => isar.boolModels.putAll([
-          BoolModel(0),
-          BoolModel(1),
-          BoolModel(2),
+    isarTest('id property', () async {
+      await isar.tWriteTxn(
+        () => isar.boolModels.tPutAll([
+          BoolModel(),
+          BoolModel(),
+          BoolModel(),
         ]),
       );
 
-      expect(
-        isar.boolModels.where().idProperty().findAll(),
-        [0, 1, 2],
+      await qEqual(
+        isar.boolModels.where().idProperty(),
+        [1, 2, 3],
       );
     });
 
-    isarTest('bool property', () {
-      isar.write(
-        (isar) => isar.boolModels.putAll([
-          BoolModel(0)
+    isarTest('bool property', () async {
+      await isar.tWriteTxn(
+        () => isar.boolModels.tPutAll([
+          BoolModel()
             ..value = true
             ..nValue = false,
-          BoolModel(1)
+          BoolModel()
             ..value = false
             ..nValue = true,
-          BoolModel(2)..value = true,
+          BoolModel()..value = true,
         ]),
       );
 
-      expect(
-        isar.boolModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.boolModels.where().valueProperty(),
         [true, false, true],
       );
 
-      expect(
-        isar.boolModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.boolModels.where().nValueProperty(),
         [false, true, null],
       );
     });
 
-    isarTest('byte property', () {
-      isar.write(
-        (isar) => isar.byteModels.putAll([
-          ByteModel(0)..value = 5,
-          ByteModel(1)..value = 123,
-          ByteModel(2)..value = 0,
+    isarTest('byte property', () async {
+      await isar.tWriteTxn(
+        () => isar.byteModels.tPutAll([
+          ByteModel()..value = 5,
+          ByteModel()..value = 123,
+          ByteModel()..value = 0,
         ]),
       );
 
-      expect(
-        isar.byteModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.byteModels.where().valueProperty(),
         [5, 123, 0],
       );
     });
 
-    isarTest('short property', () {
-      isar.write(
-        (isar) => isar.shortModels.putAll([
-          ShortModel(0)
+    isarTest('short property', () async {
+      await isar.tWriteTxn(
+        () => isar.shortModels.tPutAll([
+          ShortModel()
             ..value = 1234
             ..nValue = 55,
-          ShortModel(1)..value = 444,
-          ShortModel(2)
+          ShortModel()..value = 444,
+          ShortModel()
             ..value = 321321
             ..nValue = 1,
         ]),
       );
 
-      expect(
-        isar.shortModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.shortModels.where().valueProperty(),
         [1234, 444, 321321],
       );
 
-      expect(
-        isar.shortModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.shortModels.where().nValueProperty(),
         [55, null, 1],
       );
     });
 
-    isarTest('int property', () {
-      isar.write(
-        (isar) => isar.intModels.putAll([
-          IntModel(0)
+    isarTest('int property', () async {
+      await isar.tWriteTxn(
+        () => isar.intModels.tPutAll([
+          IntModel()
             ..value = -5
             ..nValue = -99999,
-          IntModel(1)
-            ..value = -9999
+          IntModel()
+            ..value = Isar.autoIncrement
             ..nValue = 0,
-          IntModel(2)..value = 9999,
+          IntModel()..value = 9999,
         ]),
       );
 
-      expect(
-        isar.intModels.where().valueProperty().findAll(),
-        [-5, -9999, 9999],
+      await qEqual(
+        isar.intModels.where().valueProperty(),
+        [-5, Isar.autoIncrement, 9999],
       );
 
-      expect(
-        isar.intModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.intModels.where().nValueProperty(),
         [-99999, 0, null],
       );
     });
 
-    isarTest('float property', () {
-      isar.write(
-        (isar) => isar.floatModels.putAll([
-          FloatModel(0)
+    isarTest('float property', () async {
+      await isar.tWriteTxn(
+        () => isar.floatModels.tPutAll([
+          FloatModel()
             ..value = -5.5
             ..nValue = double.infinity,
-          FloatModel(1)..value = 70.7,
-          FloatModel(2)
+          FloatModel()..value = 70.7,
+          FloatModel()
             ..value = double.nan
             ..nValue = double.negativeInfinity,
         ]),
       );
 
-      expect(
-        listEquals(
-          isar.floatModels.where().valueProperty().findAll(),
-          [-5.5, 70.7, double.nan],
-        ),
-        true,
+      await qEqual(
+        isar.floatModels.where().valueProperty(),
+        [-5.5, 70.7, double.nan],
       );
 
-      expect(
-        listEquals(
-          isar.floatModels.where().nValueProperty().findAll(),
-          [double.infinity, null, double.negativeInfinity],
-        ),
-        true,
-      );
-    });
-
-    isarTest('double property', () {
-      isar.write(
-        (isar) => isar.doubleModels.putAll([
-          DoubleModel(0)
-            ..value = -5.5
-            ..nValue = double.infinity,
-          DoubleModel(1)..value = 70.7,
-          DoubleModel(2)
-            ..value = double.nan
-            ..nValue = double.negativeInfinity,
-        ]),
-      );
-
-      expect(
-        listEquals(
-          isar.doubleModels.where().valueProperty().findAll(),
-          [-5.5, 70.7, double.nan],
-        ),
-        true,
-      );
-
-      expect(
-        isar.doubleModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.floatModels.where().nValueProperty(),
         [double.infinity, null, double.negativeInfinity],
       );
     });
 
-    isarTest('DateTime property', () {
-      isar.write(
-        (isar) => isar.dateTimeModels.putAll([
-          DateTimeModel(0)..value = DateTime(2022),
-          DateTimeModel(1)
-            ..value = DateTime(2020)
-            ..nValue = DateTime(2010),
-          DateTimeModel(2)..value = DateTime(1999),
+    isarTest('double property', () async {
+      await isar.tWriteTxn(
+        () => isar.doubleModels.tPutAll([
+          DoubleModel()
+            ..value = -5.5
+            ..nValue = double.infinity,
+          DoubleModel()..value = 70.7,
+          DoubleModel()
+            ..value = double.nan
+            ..nValue = double.negativeInfinity,
         ]),
       );
 
-      expect(
-        isar.dateTimeModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.doubleModels.where().valueProperty(),
+        [-5.5, 70.7, double.nan],
+      );
+
+      await qEqual(
+        isar.doubleModels.where().nValueProperty(),
+        [double.infinity, null, double.negativeInfinity],
+      );
+    });
+
+    isarTest('DateTime property', () async {
+      await isar.tWriteTxn(
+        () => isar.dateTimeModels.tPutAll([
+          DateTimeModel()..value = DateTime(2022),
+          DateTimeModel()
+            ..value = DateTime(2020)
+            ..nValue = DateTime(2010),
+          DateTimeModel()..value = DateTime(1999),
+        ]),
+      );
+
+      await qEqual(
+        isar.dateTimeModels.where().valueProperty(),
         [DateTime(2022), DateTime(2020), DateTime(1999)],
       );
 
-      expect(
-        isar.dateTimeModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.dateTimeModels.where().nValueProperty(),
         [null, DateTime(2010), null],
       );
     });
 
-    isarTest('String property', () {
-      isar.write(
-        (isar) => isar.stringModels.putAll([
-          StringModel(0)
+    isarTest('String property', () async {
+      await isar.tWriteTxn(
+        () => isar.stringModels.tPutAll([
+          StringModel()
             ..value = 'Just'
             ..nValue = 'A',
-          StringModel(1)..value = 'a',
-          StringModel(2)
+          StringModel()..value = 'a',
+          StringModel()
             ..value = 'test'
             ..nValue = 'Z',
         ]),
       );
 
-      expect(
-        isar.stringModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.stringModels.where().valueProperty(),
         ['Just', 'a', 'test'],
       );
 
-      expect(
-        isar.stringModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.stringModels.where().nValueProperty(),
         ['A', null, 'Z'],
       );
     });
 
-    isarTest('Object property', () {
-      isar.write(
-        (isar) => isar.objectModels.putAll([
-          ObjectModel(0)
+    isarTest('Object property', () async {
+      await isar.tWriteTxn(
+        () => isar.objectModels.tPutAll([
+          ObjectModel()
             ..value = EmbeddedModel('E1')
             ..nValue = EmbeddedModel('XXX'),
-          ObjectModel(1)
+          ObjectModel()
             ..value = EmbeddedModel('E2')
             ..nValue = EmbeddedModel('YYY'),
-          ObjectModel(2)..value = EmbeddedModel('E3'),
+          ObjectModel()..value = EmbeddedModel('E3'),
         ]),
       );
 
-      expect(
-        isar.objectModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.objectModels.where().valueProperty(),
         [EmbeddedModel('E1'), EmbeddedModel('E2'), EmbeddedModel('E3')],
       );
 
-      expect(
-        isar.objectModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.objectModels.where().nValueProperty(),
         [EmbeddedModel('XXX'), EmbeddedModel('YYY'), null],
       );
     });
 
-    isarTest('Enum property', () {
-      isar.write(
-        (isar) => isar.enumModels.putAll([
-          EnumModel(0)..value = TestEnum.option2,
-          EnumModel(1)
+    isarTest('Enum property', () async {
+      await isar.tWriteTxn(
+        () => isar.enumModels.tPutAll([
+          EnumModel()..value = TestEnum.option2,
+          EnumModel()
             ..value = TestEnum.option3
             ..nValue = TestEnum.option3,
-          EnumModel(2)..value = TestEnum.option2,
+          EnumModel()..value = TestEnum.option2,
         ]),
       );
 
-      expect(
-        isar.enumModels.where().valueProperty().findAll(),
+      await qEqual(
+        isar.enumModels.where().valueProperty(),
         [TestEnum.option2, TestEnum.option3, TestEnum.option2],
       );
 
-      expect(
-        isar.enumModels.where().nValueProperty().findAll(),
+      await qEqual(
+        isar.enumModels.where().nValueProperty(),
         [null, TestEnum.option3, null],
       );
     });
 
-    isarTest('bool list property', () {
-      isar.write(
-        (isar) => isar.boolModels.putAll([
-          BoolModel(0)
+    isarTest('bool list property', () async {
+      await isar.tWriteTxn(
+        () => isar.boolModels.tPutAll([
+          BoolModel()
             ..list = [true, false, true]
             ..nList = [false],
-          BoolModel(1)..list = [],
-          BoolModel(2)
+          BoolModel()..list = [],
+          BoolModel()
             ..list = [true]
             ..nList = [],
         ]),
       );
 
-      expect(isar.boolModels.where().listProperty().findAll(), [
+      await qEqual(isar.boolModels.where().listProperty(), [
         [true, false, true],
         <bool>[],
         [true],
       ]);
 
-      expect(isar.boolModels.where().nListProperty().findAll(), [
+      await qEqual(isar.boolModels.where().nListProperty(), [
         [false],
         null,
         <bool>[],
       ]);
     });
 
-    isarTest('byte list property', () {
-      isar.write(
-        (isar) => isar.byteModels.putAll([
-          ByteModel(0)..list = Uint8List.fromList([0, 10, 255]),
-          ByteModel(1)
+    isarTest('byte list property', () async {
+      await isar.tWriteTxn(
+        () => isar.byteModels.tPutAll([
+          ByteModel()..list = Uint8List.fromList([0, 10, 255]),
+          ByteModel()
             ..list = []
             ..nList = [1, 2, 3, 4, 5],
-          ByteModel(2)..list = [3],
+          ByteModel()..list = [3],
         ]),
       );
 
-      expect(
-        isar.byteModels.where().listProperty().findAll(),
+      await qEqual(
+        isar.byteModels.where().listProperty(),
         [
           Uint8List.fromList([0, 10, 255]),
           Uint8List.fromList([]),
@@ -322,8 +313,8 @@ void main() {
         ],
       );
 
-      expect(
-        isar.byteModels.where().nListProperty().findAll(),
+      await qEqual(
+        isar.byteModels.where().nListProperty(),
         [
           null,
           Uint8List.fromList([1, 2, 3, 4, 5]),
@@ -332,161 +323,149 @@ void main() {
       );
     });
 
-    isarTest('short list property', () {
-      isar.write(
-        (isar) => isar.shortModels.putAll([
-          ShortModel(0)
+    isarTest('short list property', () async {
+      await isar.tWriteTxn(
+        () => isar.shortModels.tPutAll([
+          ShortModel()
             ..list = [-5, 70, 999]
             ..nList = [],
-          ShortModel(1)
+          ShortModel()
             ..list = []
             ..nList = [1, 2, 3],
-          ShortModel(2)..list = [0],
+          ShortModel()..list = [0],
         ]),
       );
 
-      expect(isar.shortModels.where().listProperty().findAll(), [
+      await qEqual(isar.shortModels.where().listProperty(), [
         [-5, 70, 999],
         <int>[],
         [0],
       ]);
 
-      expect(isar.shortModels.where().nListProperty().findAll(), [
+      await qEqual(isar.shortModels.where().nListProperty(), [
         <int>[],
         [1, 2, 3],
         null,
       ]);
     });
 
-    isarTest('int list property', () {
-      isar.write(
-        (isar) => isar.intModels.putAll([
-          IntModel(0)
+    isarTest('int list property', () async {
+      await isar.tWriteTxn(
+        () => isar.intModels.tPutAll([
+          IntModel()
             ..list = [-5, 70, 999]
             ..nList = [],
-          IntModel(1)
+          IntModel()
             ..list = []
             ..nList = [1, 2, 3],
-          IntModel(2)..list = [0],
+          IntModel()..list = [0],
         ]),
       );
 
-      expect(isar.intModels.where().listProperty().findAll(), [
+      await qEqual(isar.intModels.where().listProperty(), [
         [-5, 70, 999],
         <int>[],
         [0],
       ]);
 
-      expect(isar.intModels.where().nListProperty().findAll(), [
+      await qEqual(isar.intModels.where().nListProperty(), [
         <int>[],
         [1, 2, 3],
         null,
       ]);
     });
 
-    isarTest('float list property', () {
-      isar.write(
-        (isar) => isar.floatModels.putAll([
-          FloatModel(0)
+    isarTest('float list property', () async {
+      await isar.tWriteTxn(
+        () => isar.floatModels.tPutAll([
+          FloatModel()
             ..list = [-5.5, 70.7, 999.999]
-            ..nList = [1919191],
-          FloatModel(1)..list = [],
-          FloatModel(2)
-            ..list = [0.0]
-            ..nList = [-1919191],
-        ]),
-      );
-
-      expect(
-        listEquals(
-          isar.floatModels.where().listProperty().findAll(),
-          [
-            [-5.5, 70.7, 999.999],
-            <double>[],
-            [0.0],
-          ],
-        ),
-        true,
-      );
-
-      expect(
-        listEquals(
-          isar.floatModels.where().nListProperty().findAll(),
-          [
-            [1919191],
-            null,
-            [-1919191],
-          ],
-        ),
-        true,
-      );
-    });
-
-    isarTest('double list property', () {
-      isar.write(
-        (isar) => isar.doubleModels.putAll([
-          DoubleModel(0)
-            ..list = [-5.5, 70.7, 999.999]
-            ..nList = [1919191.1919191],
-          DoubleModel(1)..list = [],
-          DoubleModel(2)
+            ..nList = [double.infinity],
+          FloatModel()..list = [],
+          FloatModel()
             ..list = [0.0]
             ..nList = [double.maxFinite],
         ]),
       );
 
-      expect(isar.doubleModels.where().listProperty().findAll(), [
+      await qEqual(isar.floatModels.where().listProperty(), [
         [-5.5, 70.7, 999.999],
         <double>[],
         [0.0],
       ]);
 
-      expect(isar.doubleModels.where().nListProperty().findAll(), [
-        [1919191.1919191],
+      await qEqual(isar.floatModels.where().nListProperty(), [
+        [double.infinity],
         null,
         [double.maxFinite],
       ]);
     });
 
-    isarTest('DateTime list property', () {
-      isar.write(
-        (isar) => isar.dateTimeModels.putAll([
-          DateTimeModel(0)
-            ..list = [DateTime(2019), DateTime(2020)]
-            ..nList = [DateTime(2000), DateTime(2001)],
-          DateTimeModel(1)
-            ..list = [DateTime(2020)]
-            ..nList = [DateTime(2000)],
-          DateTimeModel(2)..list = [],
+    isarTest('double list property', () async {
+      await isar.tWriteTxn(
+        () => isar.doubleModels.tPutAll([
+          DoubleModel()
+            ..list = [-5.5, 70.7, 999.999]
+            ..nList = [double.infinity],
+          DoubleModel()..list = [],
+          DoubleModel()
+            ..list = [0.0]
+            ..nList = [double.maxFinite],
         ]),
       );
 
-      expect(isar.dateTimeModels.where().listProperty().findAll(), [
+      await qEqual(isar.doubleModels.where().listProperty(), [
+        [-5.5, 70.7, 999.999],
+        <double>[],
+        [0.0],
+      ]);
+
+      await qEqual(isar.doubleModels.where().nListProperty(), [
+        [double.infinity],
+        null,
+        [double.maxFinite],
+      ]);
+    });
+
+    isarTest('DateTime list property', () async {
+      await isar.tWriteTxn(
+        () => isar.dateTimeModels.tPutAll([
+          DateTimeModel()
+            ..list = [DateTime(2019), DateTime(2020)]
+            ..nList = [DateTime(2000), DateTime(2001)],
+          DateTimeModel()
+            ..list = [DateTime(2020)]
+            ..nList = [DateTime(2000)],
+          DateTimeModel()..list = [],
+        ]),
+      );
+
+      await qEqual(isar.dateTimeModels.where().listProperty(), [
         [DateTime(2019), DateTime(2020)],
         [DateTime(2020)],
         <DateTime>[],
       ]);
 
-      expect(isar.dateTimeModels.where().nListProperty().findAll(), [
+      await qEqual(isar.dateTimeModels.where().nListProperty(), [
         [DateTime(2000), DateTime(2001)],
         [DateTime(2000)],
         null,
       ]);
     });
 
-    isarTest('String list property', () {
-      isar.write(
-        (isar) => isar.stringModels.putAll([
-          StringModel(0)..list = ['Just', 'a', 'test'],
-          StringModel(1)..list = [],
-          StringModel(2)
+    isarTest('String list property', () async {
+      await isar.tWriteTxn(
+        () => isar.stringModels.tPutAll([
+          StringModel()..list = ['Just', 'a', 'test'],
+          StringModel()..list = [],
+          StringModel()
             ..list = ['']
             ..nList = ['HELLO'],
         ]),
       );
 
-      expect(
-        isar.stringModels.where().listProperty().findAll(),
+      await qEqual(
+        isar.stringModels.where().listProperty(),
         [
           ['Just', 'a', 'test'],
           <String>[],
@@ -494,8 +473,8 @@ void main() {
         ],
       );
 
-      expect(
-        isar.stringModels.where().nListProperty().findAll(),
+      await qEqual(
+        isar.stringModels.where().nListProperty(),
         [
           null,
           null,
@@ -504,21 +483,21 @@ void main() {
       );
     });
 
-    isarTest('Object list property', () {
-      isar.write(
-        (isar) => isar.objectModels.putAll([
-          ObjectModel(0)
+    isarTest('Object list property', () async {
+      await isar.tWriteTxn(
+        () => isar.objectModels.tPutAll([
+          ObjectModel()
             ..list = []
             ..nList = [EmbeddedModel('abc'), EmbeddedModel('def')],
-          ObjectModel(1)..list = [EmbeddedModel('abc'), EmbeddedModel('def')],
-          ObjectModel(2)
+          ObjectModel()..list = [EmbeddedModel('abc'), EmbeddedModel('def')],
+          ObjectModel()
             ..list = [EmbeddedModel()]
             ..nList = [EmbeddedModel()],
         ]),
       );
 
-      expect(
-        isar.objectModels.where().listProperty().findAll(),
+      await qEqual(
+        isar.objectModels.where().listProperty(),
         [
           <EmbeddedModel>[],
           [EmbeddedModel('abc'), EmbeddedModel('def')],
@@ -526,8 +505,8 @@ void main() {
         ],
       );
 
-      expect(
-        isar.objectModels.where().nListProperty().findAll(),
+      await qEqual(
+        isar.objectModels.where().nListProperty(),
         [
           [EmbeddedModel('abc'), EmbeddedModel('def')],
           null,
@@ -536,19 +515,19 @@ void main() {
       );
     });
 
-    isarTest('Enum list property', () {
-      isar.write(
-        (isar) => isar.enumModels.putAll([
-          EnumModel(0)
+    isarTest('Enum list property', () async {
+      await isar.tWriteTxn(
+        () => isar.enumModels.tPutAll([
+          EnumModel()
             ..list = [TestEnum.option2]
             ..nList = [TestEnum.option2, TestEnum.option3],
-          EnumModel(1)..list = [TestEnum.option1],
-          EnumModel(2)..list = [],
+          EnumModel()..list = [TestEnum.option1],
+          EnumModel()..list = [],
         ]),
       );
 
-      expect(
-        isar.enumModels.where().listProperty().findAll(),
+      await qEqual(
+        isar.enumModels.where().listProperty(),
         [
           [TestEnum.option2],
           [TestEnum.option1],
@@ -556,8 +535,8 @@ void main() {
         ],
       );
 
-      expect(
-        isar.enumModels.where().nListProperty().findAll(),
+      await qEqual(
+        isar.enumModels.where().nListProperty(),
         [
           [TestEnum.option2, TestEnum.option3],
           null,

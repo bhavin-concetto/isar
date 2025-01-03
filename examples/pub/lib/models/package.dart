@@ -13,12 +13,12 @@ class Package {
     required this.name,
     required this.version,
     required this.isLatest,
-    this.homepage,
-    this.documentation,
-    this.description,
     required this.dependencies,
     required this.devDependencies,
     required this.published,
+    this.homepage,
+    this.documentation,
+    this.description,
     this.points,
     this.likes,
     this.popularity,
@@ -29,10 +29,11 @@ class Package {
     this.license,
     this.osiLicense,
     this.platforms,
-  });
+  }) : id = Isar.autoIncrement;
 
-  String get id => '$name$version';
+  final Id id;
 
+  @Index(unique: true, replace: true, composite: [CompositeIndex('version')])
   final String name;
 
   final String version;
@@ -69,6 +70,7 @@ class Package {
 
   final bool? osiLicense;
 
+  @enumerated
   final List<SupportedPlatform>? platforms;
 
   static List<Package> fromApiPackage(ApiPackage package) {
@@ -84,7 +86,8 @@ class Package {
           documentation: p.pubspec.documentation,
           description: p.pubspec.description,
           dependencies: Dependency.fromDependencies(p.pubspec.dependencies),
-          devDependencies: Dependency.fromDependencies(p.pubspec.devDependencies),
+          devDependencies:
+              Dependency.fromDependencies(p.pubspec.devDependencies),
           published: p.published,
         ),
       );
@@ -93,7 +96,7 @@ class Package {
     return versions;
   }
 
-  copyWith({
+  Package copyWith({
     points,
     likes,
     popularity,
@@ -126,9 +129,11 @@ class Package {
     );
   }
 
-  Package copyWithMetrics(ApiPackageMetrics metrics) {
-    final publishers = metrics.tags.where((t) => t.startsWith('publisher:')).toList();
-    final publisher = publishers.isNotEmpty ? publishers.first.substring(10) : null;
+  Package? copyWithMetrics(ApiPackageMetrics metrics) {
+    final publishers =
+        metrics.tags.where((t) => t.startsWith('publisher:')).toList();
+    final publisher =
+        publishers.isNotEmpty ? publishers.first.substring(10) : null;
     return copyWith(
       points: metrics.grantedPoints,
       likes: metrics.likeCount,
@@ -139,7 +144,10 @@ class Package {
       flutterFavorite: metrics.tags.contains('is:flutter-favorite'),
       license: metrics.tags
           .firstWhere(
-            (e) => e.startsWith('license:') && e != 'license:osi-approved' && e != 'license:fsf-libre',
+            (e) =>
+                e.startsWith('license:') &&
+                e != 'license:osi-approved' &&
+                e != 'license:fsf-libre',
             orElse: () => 'license:unknown',
           )
           .substring(8)
@@ -147,11 +155,13 @@ class Package {
       osiLicense: metrics.tags.contains('license:osi-approved'),
       platforms: [
         if (metrics.tags.contains('platform:web')) SupportedPlatform.web,
-        if (metrics.tags.contains('platform:android')) SupportedPlatform.android,
+        if (metrics.tags.contains('platform:android'))
+          SupportedPlatform.android,
         if (metrics.tags.contains('platform:ios')) SupportedPlatform.ios,
         if (metrics.tags.contains('platform:linux')) SupportedPlatform.linux,
         if (metrics.tags.contains('platform:macos')) SupportedPlatform.macos,
-        if (metrics.tags.contains('platform:windows')) SupportedPlatform.windows,
+        if (metrics.tags.contains('platform:windows'))
+          SupportedPlatform.windows,
       ],
     );
   }
@@ -171,7 +181,8 @@ class Dependency {
     final dependencies = <Dependency>[];
     for (final package in dependenciesMap.keys) {
       final dep = dependenciesMap[package]!;
-      final constraint = dep is HostedReference ? dep.versionConstraint.toString() : 'unknown';
+      final constraint =
+          dep is HostedReference ? dep.versionConstraint.toString() : 'unknown';
       dependencies.add(
         Dependency(
           name: package,
