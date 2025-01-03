@@ -1,0 +1,9 @@
+# melos_managed_dependency_overrides: isar,isar_flutter_libs,isar_generator,analyzer
+dependency_overrides:
+  analyzer: ^7.1.0
+  isar:
+    path: ../isar
+  isar_flutter_libs:
+    path: ../isar_flutter_libs
+  isar_generator:
+    path: ../isar_generator

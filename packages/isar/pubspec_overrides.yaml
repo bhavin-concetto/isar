@@ -1,0 +1,5 @@
+# melos_managed_dependency_overrides: source_gen,analyzer,dart_style
+dependency_overrides:
+  source_gen: ^2.0.0
+  analyzer: ^7.1.0
+  dart_style: ^3.0.1

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:isar/isar.dart';
 import 'package:isar_test/isar_test.dart';
 import 'package:test/test.dart';
@@ -10,11 +8,12 @@ part 'filter_bool_test.g.dart';
 class BoolModel {
   BoolModel(this.field);
 
-  int id = Random().nextInt(99999);
+  Id? id;
 
   bool? field;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) {
     return other is BoolModel && other.id == id && other.field == field;
   }
@@ -23,7 +22,7 @@ class BoolModel {
 void main() {
   group('Bool filter', () {
     late Isar isar;
-    late IsarCollection<int, BoolModel> col;
+    late IsarCollection<BoolModel> col;
 
     late BoolModel objNull;
     late BoolModel objFalse;
@@ -39,28 +38,28 @@ void main() {
       objTrue = BoolModel(true);
       objFalse2 = BoolModel(false);
 
-      isar.write((isar) {
-        col.putAll([objNull, objFalse, objTrue, objFalse2]);
+      await isar.writeTxn(() async {
+        await col.putAll([objNull, objFalse, objTrue, objFalse2]);
       });
     });
 
-    isarTest('.equalTo()', () {
-      expect(col.where().fieldEqualTo(true).findAll(), [objTrue]);
-      expect(
-        col.where().fieldEqualTo(false).findAll().toSet(),
-        {objFalse, objFalse2},
+    isarTest('.equalTo()', () async {
+      await qEqual(col.filter().fieldEqualTo(true), [objTrue]);
+      await qEqualSet(
+        col.filter().fieldEqualTo(false),
+        [objFalse, objFalse2],
       );
-      expect(col.where().fieldEqualTo(null).findAll(), [objNull]);
+      await qEqual(col.filter().fieldEqualTo(null), [objNull]);
     });
 
-    isarTest('.isNull()', () {
-      expect(col.where().fieldIsNull().findAll(), [objNull]);
+    isarTest('.isNull()', () async {
+      await qEqualSet(col.where().filter().fieldIsNull(), [objNull]);
     });
 
-    isarTest('.isNotNull()', () {
-      expect(
-        col.where().fieldIsNotNull().findAll().toSet(),
-        {objFalse, objTrue, objFalse2},
+    isarTest('.isNotNull()', () async {
+      await qEqualSet(
+        col.where().filter().fieldIsNotNull(),
+        [objFalse, objTrue, objFalse2],
       );
     });
   });

@@ -1,0 +1,4 @@
+# melos_managed_dependency_overrides: isar
+dependency_overrides:
+  isar:
+    path: ../isar

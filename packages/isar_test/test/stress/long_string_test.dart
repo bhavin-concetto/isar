@@ -9,18 +9,18 @@ part 'long_string_test.g.dart';
 @collection
 class StringModel {
   StringModel({
-    required this.id,
     this.string,
     this.stringList,
   });
 
-  int id;
+  Id? id = Isar.autoIncrement;
 
   String? string;
 
   List<String>? stringList;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       other is StringModel &&
       string == other.string &&
@@ -44,46 +44,44 @@ void main() {
       isar = await openTempIsar([StringModelSchema]);
     });
 
-    isarTest('Single', () {
+    isarTest('Single', () async {
       final models = <StringModel>[
         for (var i = 0; i < 100; i++)
           StringModel(
-            id: i,
             string: '${_randomStr(50000)}test$i${_randomStr(50000)}',
           ),
       ];
-      isar.write((isar) {
-        isar.stringModels.putAll(models);
+      await isar.tWriteTxn(() async {
+        await isar.stringModels.tPutAll(models);
       });
 
-      expect(isar.stringModels.where().findAll(), models);
+      await qEqual(isar.stringModels.where(), models);
 
-      expect(
-        isar.stringModels.where().stringContains('test75').findAll(),
+      await qEqual(
+        isar.stringModels.filter().stringContains('test75'),
         [models[75]],
       );
-      expect(
-        isar.stringModels.where().stringMatches('*test66*').findAll(),
+      await qEqual(
+        isar.stringModels.filter().stringMatches('*test66*'),
         [models[66]],
       );
     });
 
-    isarTest('List', () {
+    isarTest('List', () async {
       final models = <StringModel>[
         for (var i = 0; i < 10; i++)
           StringModel(
-            id: i,
             stringList: [
               for (var j = 0; j < 100; j++)
                 '${_randomStr(10000)}test${i}_$j${_randomStr(10000)}',
             ],
           ),
       ];
-      isar.write((isar) {
-        isar.stringModels.putAll(models);
+      await isar.tWriteTxn(() async {
+        await isar.stringModels.tPutAll(models);
       });
 
-      expect(isar.stringModels.where().findAll(), models);
+      await qEqual(isar.stringModels.where(), models);
     });
   });
 }

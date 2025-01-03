@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:isar_inspector/connect_client.dart';
 import 'package:isar_inspector/connected_layout.dart';
 import 'package:isar_inspector/error_screen.dart';
 
 class ConnectionScreen extends StatefulWidget {
   const ConnectionScreen({
+    super.key,
     required this.port,
     required this.secret,
-    super.key,
   });
 
   final String port;
@@ -42,7 +43,7 @@ class _ConnectionPageState extends State<ConnectionScreen> {
       future: clientFuture,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return _InstancesLoader(client: snapshot.data!);
+          return _SchemaLoader(client: snapshot.data!);
         } else if (snapshot.hasError) {
           return const ErrorScreen();
         } else {
@@ -53,22 +54,24 @@ class _ConnectionPageState extends State<ConnectionScreen> {
   }
 }
 
-class _InstancesLoader extends StatefulWidget {
-  const _InstancesLoader({required this.client});
+class _SchemaLoader extends StatefulWidget {
+  const _SchemaLoader({required this.client});
 
   final ConnectClient client;
 
   @override
-  State<_InstancesLoader> createState() => _InstancesLoaderState();
+  State<_SchemaLoader> createState() => _SchemaLoaderState();
 }
 
-class _InstancesLoaderState extends State<_InstancesLoader> {
+class _SchemaLoaderState extends State<_SchemaLoader> {
   late Future<List<String>> instancesFuture;
+  late Future<List<CollectionSchema<dynamic>>> collectionsFuture;
   late StreamSubscription<void> _instancesSubscription;
 
   @override
   void initState() {
     instancesFuture = widget.client.listInstances();
+    collectionsFuture = widget.client.getSchema();
     _instancesSubscription = widget.client.instancesChanged.listen((event) {
       setState(() {
         instancesFuture = widget.client.listInstances();
@@ -78,8 +81,9 @@ class _InstancesLoaderState extends State<_InstancesLoader> {
   }
 
   @override
-  void didUpdateWidget(covariant _InstancesLoader oldWidget) {
+  void didUpdateWidget(covariant _SchemaLoader oldWidget) {
     instancesFuture = widget.client.listInstances();
+    collectionsFuture = widget.client.getSchema();
     super.didUpdateWidget(oldWidget);
   }
 
@@ -91,13 +95,14 @@ class _InstancesLoaderState extends State<_InstancesLoader> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<String>>(
-      future: instancesFuture,
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([instancesFuture, collectionsFuture]),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return ConnectedLayout(
             client: widget.client,
-            instances: snapshot.data!,
+            instances: snapshot.data![0] as List<String>,
+            collections: snapshot.data![1] as List<CollectionSchema<dynamic>>,
           );
         } else if (snapshot.hasError) {
           return const ErrorScreen();

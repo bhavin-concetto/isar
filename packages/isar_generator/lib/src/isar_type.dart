@@ -27,10 +27,10 @@ extension DartTypeX on DartType {
       }
     } else if (isDartCoreString) {
       return IsarType.string;
-    } else if (_isDateTime(element2!)) {
-      return IsarType.dateTime;
-    } else if (element2!.embeddedAnnotation != null) {
-      return IsarType.object;
+    // } else if (_isDateTime(element2!)) {
+    //   return IsarType.dateTime;
+    // } else if (element2!.embeddedAnnotation != null) {
+    //   return IsarType.object;
     }
 
     return null;

@@ -18,19 +18,20 @@ extension ClassElementX on ClassElement {
     return constructors.any(
       (ConstructorElement c) =>
           c.isPublic &&
-          !c.parameters.any((ParameterElement p) => !p.isOptional),
+          c.parameters.every((ParameterElement p) => p.isOptional),
     );
   }
 
   List<PropertyInducingElement> get allAccessors {
     final ignoreFields =
-        collectionAnnotation?.ignore ?? embeddedAnnotation!.ignore;
+        collectionAnnotation?.ignore ?? embeddedAnnotation?.ignore ?? {};
     return [
-      ...accessors.mapNotNull((e) => e.variable),
-      if (collectionAnnotation?.inheritance ?? embeddedAnnotation!.inheritance)
+      ...accessors.mapNotNull((PropertyAccessorElement e) => e.variable2),
+      if (collectionAnnotation?.inheritance == true ||
+          embeddedAnnotation?.inheritance == true)
         for (InterfaceType supertype in allSupertypes) ...[
           if (!supertype.isDartCoreObject)
-            ...supertype.accessors.mapNotNull((e) => e.variable)
+            ...supertype.accessors.mapNotNull((e) => e.variable2)
         ]
     ]
         .where(
@@ -50,16 +51,17 @@ extension ClassElementX on ClassElement {
 }
 
 extension PropertyElementX on PropertyInducingElement {
-  bool get isLink => type.element2!.name == 'IsarLink';
+  bool get isLink => type.element?.name == 'IsarLink';
 
-  bool get isLinks => type.element2!.name == 'IsarLinks';
+  bool get isLinks => type.element?.name == 'IsarLinks';
 
   Enumerated? get enumeratedAnnotation {
     final ann = _enumeratedChecker.firstAnnotationOfExact(nonSynthetic);
     if (ann == null) {
       return null;
     }
-    final typeIndex = ann.getField('type')!.getField('index')!.toIntValue()!;
+    final typeIndex = ann.getField('type')?.getField('index')?.toIntValue();
+    if (typeIndex == null) return null;
     return Enumerated(
       EnumType.values[typeIndex],
       ann.getField('property')?.toStringValue(),
@@ -71,18 +73,20 @@ extension PropertyElementX on PropertyInducingElement {
     if (ann == null) {
       return null;
     }
-    return Backlink(to: ann.getField('to')!.toStringValue()!);
+    final to = ann.getField('to')?.toStringValue();
+    if (to == null) return null;
+    return Backlink(to: to);
   }
 
   List<Index> get indexAnnotations {
     return _indexChecker.annotationsOfExact(nonSynthetic).map((DartObject ann) {
-      final rawComposite = ann.getField('composite')!.toListValue();
+      final rawComposite = ann.getField('composite')?.toListValue();
       final composite = <CompositeIndex>[];
       if (rawComposite != null) {
         for (final c in rawComposite) {
-          final indexTypeField = c.getField('type')!;
+          final indexTypeField = c.getField('type');
           IndexType? indexType;
-          if (!indexTypeField.isNull) {
+          if (indexTypeField!= null && !indexTypeField.isNull) {
             final indexTypeIndex =
                 indexTypeField.getField('index')!.toIntValue()!;
             indexType = IndexType.values[indexTypeIndex];

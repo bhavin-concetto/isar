@@ -5,9 +5,11 @@ edition = "2021"
 
 [lib]
 name = "mdbx_sys"
-doctest = false
+
+[dependencies]
+libc = "0.2"
 
 [build-dependencies]
 cmake = "0.1"
 cc = "1.0"
-bindgen = { version = "0.66", default-features = false, features = ["runtime"] }
+bindgen = { version = "0.63", default-features = false, features = ["runtime"] }

@@ -19,12 +19,11 @@ class NoDefaultModel {
     this.doubleValue,
     this.dateTimeValue,
     this.stringValue,
-    this.jsonValue,
-    this.enumValue,
     this.embeddedValue,
+    this.enumValue,
   );
 
-  final int id;
+  final Id id;
 
   final bool boolValue;
 
@@ -42,11 +41,10 @@ class NoDefaultModel {
 
   final String stringValue;
 
-  final MyEnum enumValue;
-
   final MyEmbedded embeddedValue;
 
-  final dynamic jsonValue;
+  @Enumerated(EnumType.name)
+  final MyEnum enumValue;
 }
 
 @Name('Col')
@@ -62,13 +60,11 @@ class NoDefaultListModel {
     this.doubleValue,
     this.dateTimeValue,
     this.stringValue,
-    this.enumValue,
     this.embeddedValue,
-    this.jsonValue,
-    this.jsonObjectValue,
+    this.enumValue,
   );
 
-  final int id;
+  final Id id;
 
   final List<bool?> boolValue;
 
@@ -86,26 +82,23 @@ class NoDefaultListModel {
 
   final List<String?> stringValue;
 
-  final List<MyEnum?> enumValue;
-
   final List<MyEmbedded?> embeddedValue;
 
-  final List<dynamic> jsonValue;
-
-  final Map<String, dynamic> jsonObjectValue;
+  @Enumerated(EnumType.name)
+  final List<MyEnum?> enumValue;
 }
 
 void main() {
   group('No default value', () {
-    isarTest('scalar', web: false, () async {
+    isarTest('scalar', () async {
       final emptyObj = EmptyModel(0);
       final isar1 = await openTempIsar([EmptyModelSchema]);
-      isar1.write((isar) => isar.emptyModels.put(emptyObj));
+      await isar1.tWriteTxn(() => isar1.emptyModels.tPut(emptyObj));
       final isarName = isar1.name;
-      isar1.close();
+      await isar1.close();
 
       final isar2 = await openTempIsar([NoDefaultModelSchema], name: isarName);
-      final obj = isar2.noDefaultModels.get(0)!;
+      final obj = (await isar2.noDefaultModels.tGet(0))!;
       expect(obj.boolValue, false);
       expect(obj.byteValue, 0);
       expect(obj.shortValue, -2147483648);
@@ -117,49 +110,76 @@ void main() {
         DateTime.fromMillisecondsSinceEpoch(0),
       );
       expect(obj.stringValue, '');
-      expect(obj.enumValue, MyEnum.value1);
       expect(obj.embeddedValue, const MyEmbedded());
-      expect(obj.jsonValue, null);
+      expect(obj.enumValue, MyEnum.value1);
     });
 
-    isarTest('scalar property', web: false, () async {
+    isarTest('scalar property', () async {
       final emptyObj = EmptyModel(0);
       final isar1 = await openTempIsar([EmptyModelSchema]);
-      isar1.write((isar) => isar.emptyModels.put(emptyObj));
+      await isar1.tWriteTxn(() => isar1.emptyModels.tPut(emptyObj));
       final isarName = isar1.name;
-      isar1.close();
+      await isar1.close();
 
       final isar2 = await openTempIsar([NoDefaultModelSchema], name: isarName);
-      final col = isar2.noDefaultModels;
-      expect(col.where().boolValueProperty().findFirst(), false);
-      expect(col.where().byteValueProperty().findFirst(), 0);
-      expect(col.where().shortValueProperty().findFirst(), -2147483648);
-      expect(col.where().intValueProperty().findFirst(), -9223372036854775808);
-      expect(col.where().floatValueProperty().findFirst(), isNaN);
-      expect(col.where().doubleValueProperty().findFirst(), isNaN);
       expect(
-        col.where().dateTimeValueProperty().findFirst(),
+        await isar2.noDefaultModels.where().boolValueProperty().tFindFirst(),
+        false,
+      );
+      expect(
+        await isar2.noDefaultModels.where().byteValueProperty().tFindFirst(),
+        0,
+      );
+      expect(
+        await isar2.noDefaultModels.where().shortValueProperty().tFindFirst(),
+        -2147483648,
+      );
+      expect(
+        await isar2.noDefaultModels.where().intValueProperty().tFindFirst(),
+        -9223372036854775808,
+      );
+      expect(
+        await isar2.noDefaultModels.where().floatValueProperty().tFindFirst(),
+        isNaN,
+      );
+      expect(
+        await isar2.noDefaultModels.where().doubleValueProperty().tFindFirst(),
+        isNaN,
+      );
+      expect(
+        await isar2.noDefaultModels
+            .where()
+            .dateTimeValueProperty()
+            .tFindFirst(),
         DateTime.fromMillisecondsSinceEpoch(0),
       );
-      expect(col.where().stringValueProperty().findFirst(), '');
-      expect(col.where().enumValueProperty().findFirst(), MyEnum.value1);
       expect(
-        col.where().embeddedValueProperty().findFirst(),
+        await isar2.noDefaultModels.where().stringValueProperty().tFindFirst(),
+        '',
+      );
+      expect(
+        await isar2.noDefaultModels
+            .where()
+            .embeddedValueProperty()
+            .tFindFirst(),
         const MyEmbedded(),
       );
-      expect(col.where().jsonValueProperty().findFirst(), null);
+      expect(
+        await isar2.noDefaultModels.where().enumValueProperty().tFindFirst(),
+        MyEnum.value1,
+      );
     });
 
-    isarTest('list', web: false, () async {
+    isarTest('list', () async {
       final emptyObj = EmptyModel(0);
       final isar1 = await openTempIsar([EmptyModelSchema]);
-      isar1.write((isar) => isar.emptyModels.put(emptyObj));
+      await isar1.tWriteTxn(() => isar1.emptyModels.tPut(emptyObj));
       final isarName = isar1.name;
-      isar1.close();
+      await isar1.close();
 
       final isar2 =
           await openTempIsar([NoDefaultListModelSchema], name: isarName);
-      final obj = isar2.noDefaultListModels.get(0)!;
+      final obj = (await isar2.noDefaultListModels.tGet(0))!;
       expect(obj.boolValue, isEmpty);
       expect(obj.byteValue, isEmpty);
       expect(obj.shortValue, isEmpty);
@@ -168,34 +188,86 @@ void main() {
       expect(obj.doubleValue, isEmpty);
       expect(obj.dateTimeValue, isEmpty);
       expect(obj.stringValue, isEmpty);
-      expect(obj.enumValue, isEmpty);
       expect(obj.embeddedValue, isEmpty);
-      expect(obj.jsonValue, isEmpty);
-      expect(obj.jsonObjectValue, isEmpty);
+      expect(obj.enumValue, isEmpty);
     });
 
-    isarTest('list property', web: false, () async {
+    isarTest('list property', () async {
       final emptyObj = EmptyModel(0);
       final isar1 = await openTempIsar([EmptyModelSchema]);
-      isar1.write((isar) => isar.emptyModels.put(emptyObj));
+      await isar1.tWriteTxn(() => isar1.emptyModels.tPut(emptyObj));
       final isarName = isar1.name;
-      isar1.close();
+      await isar1.close();
 
       final isar2 =
           await openTempIsar([NoDefaultListModelSchema], name: isarName);
-      final col = isar2.noDefaultListModels;
-      expect(col.where().boolValueProperty().findFirst(), isEmpty);
-      expect(col.where().byteValueProperty().findFirst(), isEmpty);
-      expect(col.where().shortValueProperty().findFirst(), isEmpty);
-      expect(col.where().intValueProperty().findFirst(), isEmpty);
-      expect(col.where().floatValueProperty().findFirst(), isEmpty);
-      expect(col.where().doubleValueProperty().findFirst(), isEmpty);
-      expect(col.where().dateTimeValueProperty().findFirst(), isEmpty);
-      expect(col.where().stringValueProperty().findFirst(), isEmpty);
-      expect(col.where().enumValueProperty().findFirst(), isEmpty);
-      expect(col.where().embeddedValueProperty().findFirst(), isEmpty);
-      expect(col.where().jsonValueProperty().findFirst(), isEmpty);
-      expect(col.where().jsonObjectValueProperty().findFirst(), isEmpty);
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .boolValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .byteValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .shortValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels.where().intValueProperty().tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .floatValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .doubleValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .dateTimeValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .stringValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .embeddedValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
+      expect(
+        await isar2.noDefaultListModels
+            .where()
+            .enumValueProperty()
+            .tFindFirst(),
+        isEmpty,
+      );
     });
   });
 }

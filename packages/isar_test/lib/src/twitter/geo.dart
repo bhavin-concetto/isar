@@ -14,6 +14,7 @@ class Place {
 
   String? url;
 
+  @Enumerated(EnumType.name)
   PlaceType? placeType;
 
   String? name;
@@ -26,16 +27,11 @@ class Place {
 }
 
 enum PlaceType {
-  admin('admin'),
-  country('country'),
-  city('city'),
-  poi('poi'),
-  neighborhood('neighborhood');
-
-  const PlaceType(this.name);
-
-  @enumValue
-  final String name;
+  admin,
+  country,
+  city,
+  poi,
+  neighborhood;
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake, createToJson: false)

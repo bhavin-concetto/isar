@@ -1,0 +1,7 @@
+# melos_managed_dependency_overrides: isar,source_gen,analyzer,dart_style
+dependency_overrides:
+  analyzer: ^7.1.0
+  dart_style: ^3.0.1
+  isar:
+    path: ../isar
+  source_gen: ^2.0.0

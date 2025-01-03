@@ -6,13 +6,14 @@ part 'filter_float_list_test.g.dart';
 
 @collection
 class FloatModel {
-  FloatModel(this.id, this.list);
+  FloatModel(this.list);
 
-  final int id;
+  Id? id;
 
   List<float?>? list;
 
   @override
+  // ignore: hash_and_equals
   bool operator ==(Object other) =>
       other is FloatModel &&
       id == other.id &&
@@ -22,7 +23,7 @@ class FloatModel {
 void main() {
   group('Float list filter', () {
     late Isar isar;
-    late IsarCollection<int, FloatModel> col;
+    late IsarCollection<FloatModel> col;
 
     late FloatModel objEmpty;
     late FloatModel obj1;
@@ -34,97 +35,99 @@ void main() {
       isar = await openTempIsar([FloatModelSchema]);
       col = isar.floatModels;
 
-      objEmpty = FloatModel(0, []);
-      obj1 = FloatModel(1, [1.1, 3.3]);
-      obj2 = FloatModel(2, [null]);
-      obj3 = FloatModel(3, [null, -1000]);
-      objNull = FloatModel(4, null);
+      objEmpty = FloatModel([]);
+      obj1 = FloatModel([1.1, 3.3]);
+      obj2 = FloatModel([null]);
+      obj3 = FloatModel([null, -1000]);
+      objNull = FloatModel(null);
 
-      isar.write((isar) {
-        col.putAll([objEmpty, obj1, obj2, obj3, objNull]);
+      await isar.writeTxn(() async {
+        await col.putAll([objEmpty, obj1, obj2, obj3, objNull]);
       });
     });
 
-    isarTest('.elementEqualTo()', () {
-      expect(col.where().listElementEqualTo(1.1).findAll(), [obj1]);
-      expect(col.where().listElementEqualTo(4).findAll(), isEmpty);
-      expect(col.where().listElementEqualTo(null).findAll(), [obj2, obj3]);
+    isarTest('.elementEqualTo()', () async {
+      await qEqual(col.filter().listElementEqualTo(1.1), [obj1]);
+      await qEqual(col.filter().listElementEqualTo(4), []);
+      await qEqual(col.filter().listElementEqualTo(null), [obj2, obj3]);
     });
 
-    isarTest('.elementGreaterThan()', () {
-      expect(col.where().listElementGreaterThan(3.3).findAll(), isEmpty);
-      expect(col.where().listElementGreaterThan(4).findAll(), isEmpty);
-      expect(col.where().listElementGreaterThan(null).findAll(), [obj1, obj3]);
-    });
-
-    isarTest('.elementGreaterThanOrEqualTo()', () {
-      expect(
-        col.where().listElementGreaterThanOrEqualTo(3.3).findAll(),
+    isarTest('.elementGreaterThan()', () async {
+      await qEqual(col.filter().listElementGreaterThan(3.3), []);
+      await qEqual(
+        col.filter().listElementGreaterThan(3.3, include: true),
         [obj1],
       );
-      expect(
-        col
-            .where()
-            .listElementGreaterThanOrEqualTo(3.4, epsilon: 0.2)
-            .findAll(),
+      await qEqual(
+        col.filter().listElementGreaterThan(3.4, include: true, epsilon: 0.2),
         [obj1],
       );
-      expect(
-        col.where().listElementGreaterThanOrEqualTo(null).findAll(),
+      await qEqual(col.filter().listElementGreaterThan(4), []);
+      await qEqual(col.filter().listElementGreaterThan(null), [obj1, obj3]);
+      await qEqual(
+        col.filter().listElementGreaterThan(null, include: true),
         [obj1, obj2, obj3],
       );
     });
 
-    isarTest('.elementLessThan()', () {
-      expect(col.where().listElementLessThan(1.1).findAll(), [obj2, obj3]);
-      expect(col.where().listElementLessThan(null).findAll(), isEmpty);
-    });
-
-    isarTest('.elementLessThanOrEqualTo()', () {
-      expect(
-        col.where().listElementLessThanOrEqualTo(1.1).findAll(),
+    isarTest('.elementLessThan()', () async {
+      await qEqual(col.filter().listElementLessThan(1.1), [obj2, obj3]);
+      await qEqual(
+        col.filter().listElementLessThan(1.1, include: true),
         [obj1, obj2, obj3],
       );
-      expect(
-        col.where().listElementLessThanOrEqualTo(1, epsilon: 0.2).findAll(),
+      await qEqual(
+        col.filter().listElementLessThan(1, include: true, epsilon: 0.2),
         [obj1, obj2, obj3],
       );
-      expect(
-        col.where().listElementLessThanOrEqualTo(null).findAll(),
+      await qEqual(col.filter().listElementLessThan(null), []);
+      await qEqual(
+        col.filter().listElementLessThan(null, include: true),
         [obj2, obj3],
       );
     });
 
-    isarTest('.anyBetween()', () {
-      expect(col.where().listElementBetween(1, 5).findAll(), [obj1]);
-      expect(
-        col.where().listElementBetween(null, 1.1).findAll(),
+    isarTest('.anyBetween()', () async {
+      await qEqual(col.filter().listElementBetween(1, 5), [obj1]);
+      await qEqual(
+        col.filter().listElementBetween(null, 1.1),
         [obj1, obj2, obj3],
       );
-      expect(col.where().listElementBetween(5, 10).findAll(), isEmpty);
-      expect(
-        col.where().listElementBetween(null, null).findAll(),
+      await qEqual(
+        col.filter().listElementBetween(null, 1.1, includeLower: false),
+        [obj1, obj3],
+      );
+      await qEqual(
+        col.filter().listElementBetween(null, 1.1, includeUpper: false),
         [obj2, obj3],
       );
-    });
-
-    isarTest('.elementIsNull()', () {
-      expect(col.where().listElementIsNull().findAll(), [obj2, obj3]);
-    });
-
-    isarTest('.elementIsNotNull()', () {
-      expect(col.where().listElementIsNotNull().findAll(), [obj1, obj3]);
-    });
-
-    isarTest('.isNull()', () {
-      expect(col.where().listIsNull().findAll(), [objNull]);
-    });
-
-    isarTest('.isNotNull()', () {
-      expect(
-        col.where().listIsNotNull().findAll(),
-        [objEmpty, obj1, obj2, obj3],
+      await qEqual(
+        col.filter().listElementBetween(
+              null,
+              1.1,
+              includeLower: false,
+              includeUpper: false,
+            ),
+        [obj3],
       );
+      await qEqual(col.filter().listElementBetween(5, 10), []);
+      await qEqual(col.filter().listElementBetween(null, null), [obj2, obj3]);
+    });
+
+    isarTest('.elementIsNull()', () async {
+      await qEqual(col.filter().listElementIsNull(), [obj2, obj3]);
+    });
+
+    isarTest('.elementIsNotNull()', () async {
+      await qEqual(col.filter().listElementIsNotNull(), [obj1, obj3]);
+    });
+
+    isarTest('.isNull()', () async {
+      await qEqual(col.filter().listIsNull(), [objNull]);
+    });
+
+    isarTest('.isNotNull()', () async {
+      await qEqual(col.filter().listIsNotNull(), [objEmpty, obj1, obj2, obj3]);
     });
   });
 }

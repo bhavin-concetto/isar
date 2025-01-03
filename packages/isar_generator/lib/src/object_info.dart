@@ -126,13 +126,6 @@ class ObjectProperty {
       case IsarType.string:
       case IsarType.stringList:
         return 'String';
-      case IsarType.duration:
-        return 'duration';
-        case IsarType.json:
-          return 'String';
-      case IsarType.durationList:
-        return 'duration';
-
     }
   }
 

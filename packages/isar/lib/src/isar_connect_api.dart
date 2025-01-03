@@ -1,13 +1,14 @@
+// coverage:ignore-file
 // ignore_for_file: public_member_api_docs
 
 import 'package:isar/isar.dart';
 
 enum ConnectAction {
+  getSchema('ext.isar.getSchema'),
   listInstances('ext.isar.listInstances'),
-  getSchemas('ext.isar.getSchemas'),
   watchInstance('ext.isar.watchInstance'),
   executeQuery('ext.isar.executeQuery'),
-  deleteQuery('ext.isar.deleteQuery'),
+  removeQuery('ext.isar.removeQuery'),
   importJson('ext.isar.importJson'),
   exportJson('ext.isar.exportJson'),
   editProperty('ext.isar.editProperty');
@@ -27,88 +28,36 @@ enum ConnectEvent {
   final String event;
 }
 
-class ConnectInstancePayload {
-  ConnectInstancePayload(this.instance);
-
-  factory ConnectInstancePayload.fromJson(Map<String, dynamic> json) {
-    return ConnectInstancePayload(json['instance'] as String);
-  }
-
-  final String instance;
-
-  Map<String, dynamic> toJson() {
-    return {'instance': instance};
-  }
-}
-
-class ConnectInstanceNamesPayload {
-  ConnectInstanceNamesPayload(this.instances);
-
-  factory ConnectInstanceNamesPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectInstanceNamesPayload(
-      (json['instances'] as List).cast<String>(),
-    );
-  }
-
-  final List<String> instances;
-
-  Map<String, dynamic> toJson() {
-    return {'instances': instances};
-  }
-}
-
-class ConnectSchemasPayload {
-  ConnectSchemasPayload(this.schemas);
-
-  factory ConnectSchemasPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectSchemasPayload(
-      (json['schemas'] as List)
-          .map((e) => IsarSchema.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-
-  final List<IsarSchema> schemas;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'schemas': schemas.map((e) => e.toJson()).toList(),
-    };
-  }
-}
-
-class ConnectQueryPayload {
-  ConnectQueryPayload({
+class ConnectQuery {
+  ConnectQuery({
     required this.instance,
     required this.collection,
     this.filter,
     this.offset,
     this.limit,
     this.sortProperty,
-    this.sortAsc = true,
+    this.sortAsc,
   });
 
-  factory ConnectQueryPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectQueryPayload(
+  factory ConnectQuery.fromJson(Map<String, dynamic> json) {
+    return ConnectQuery(
       instance: json['instance'] as String,
       collection: json['collection'] as String,
-      filter: json['filter'] != null
-          ? _filterFromJson(json['filter'] as Map<String, dynamic>)
-          : null,
+      filter: _filterFromJson(json['filter'] as Map<String, dynamic>?),
       offset: json['offset'] as int?,
       limit: json['limit'] as int?,
-      sortProperty: json['sortProperty'] as int?,
-      sortAsc: json['sortAsc'] as bool,
+      sortProperty: json['sortProperty'] as String?,
+      sortAsc: json['sortAsc'] as bool?,
     );
   }
 
   final String instance;
   final String collection;
-  final Filter? filter;
+  final FilterOperation? filter;
   final int? offset;
   final int? limit;
-  final int? sortProperty;
-  final bool sortAsc;
+  final String? sortProperty;
+  final bool? sortAsc;
 
   Map<String, dynamic> toJson() {
     return {
@@ -118,123 +67,88 @@ class ConnectQueryPayload {
       if (offset != null) 'offset': offset,
       if (limit != null) 'limit': limit,
       if (sortProperty != null) 'sortProperty': sortProperty,
-      'sortAsc': sortAsc,
+      if (sortAsc != null) 'sortAsc': sortAsc,
     };
   }
 
-  static Filter _filterFromJson(Map<String, dynamic> json) {
-    final property = json['property'] as int?;
-    final value = json['value'] ?? json['wildcard'];
-    switch (json['type']) {
-      case 'eq':
-        return EqualCondition(property: property!, value: value);
-      case 'gt':
-        return GreaterCondition(property: property!, value: value);
-      case 'gte':
-        return GreaterOrEqualCondition(property: property!, value: value);
-      case 'lt':
-        return LessCondition(property: property!, value: value);
-      case 'lte':
-        return LessOrEqualCondition(property: property!, value: value);
-      case 'between':
-        return BetweenCondition(
-          property: property!,
-          lower: json['lower'],
-          upper: json['upper'],
-        );
-      case 'startsWith':
-        return StartsWithCondition(property: property!, value: value as String);
-      case 'endsWith':
-        return EndsWithCondition(property: property!, value: value as String);
-      case 'contains':
-        return ContainsCondition(property: property!, value: value as String);
-      case 'matches':
-        return MatchesCondition(property: property!, wildcard: value as String);
-      case 'isNull':
-        return IsNullCondition(property: property!);
-      case 'and':
-        return AndGroup(
-          (json['filters'] as List)
-              .map((e) => _filterFromJson(e as Map<String, dynamic>))
-              .toList(),
-        );
-      case 'or':
-        return OrGroup(
-          (json['filters'] as List)
-              .map((e) => _filterFromJson(e as Map<String, dynamic>))
-              .toList(),
-        );
-      case 'not':
-        return NotGroup(
-          _filterFromJson(json['filter'] as Map<String, dynamic>),
-        );
-      default:
-        throw UnimplementedError();
+  static FilterOperation? _filterFromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return null;
+    }
+    if (json.containsKey('filters')) {
+      final filters = (json['filters'] as List)
+          .map((e) => _filterFromJson(e as Map<String, dynamic>?)!)
+          .toList();
+      return FilterGroup(
+        type: FilterGroupType.values[json['type'] as int],
+        filters: filters,
+      );
+    } else {
+      return FilterCondition(
+        type: FilterConditionType.values[json['type'] as int],
+        property: json['property'] as String,
+        value1: json['value1'],
+        value2: json['value2'],
+        include1: json['include1'] as bool,
+        include2: json['include2'] as bool,
+        caseSensitive: json['caseSensitive'] as bool,
+      );
     }
   }
 
-  static Map<String, dynamic> _filterToJson(Filter filter) {
-    switch (filter) {
-      case EqualCondition(:final property, :final value):
-        return {'type': 'eq', 'property': property, 'value': value};
-      case GreaterCondition(:final property, :final value):
-        return {'type': 'gt', 'property': property, 'value': value};
-      case GreaterOrEqualCondition(:final property, :final value):
-        return {'type': 'gte', 'property': property, 'value': value};
-      case LessCondition(:final property, :final value):
-        return {'type': 'lt', 'property': property, 'value': value};
-      case LessOrEqualCondition(:final property, :final value):
-        return {'type': 'lte', 'property': property, 'value': value};
-      case BetweenCondition(
-          property: final property,
-          lower: final lower,
-          upper: final upper,
-        ):
-        return {
-          'type': 'between',
-          'property': property,
-          'lower': lower,
-          'upper': upper,
-        };
-      case StartsWithCondition(:final property, :final value):
-        return {'type': 'startsWith', 'property': property, 'value': value};
-      case EndsWithCondition(:final property, :final value):
-        return {'type': 'endsWith', 'property': property, 'value': value};
-      case ContainsCondition(:final property, :final value):
-        return {'type': 'contains', 'property': property, 'value': value};
-      case MatchesCondition(property: final property, wildcard: final wildcard):
-        return {'type': 'matches', 'property': property, 'value': wildcard};
-      case IsNullCondition(property: final property):
-        return {'type': 'isNull', 'property': property};
-      case AndGroup(filters: final filters):
-        return {'type': 'and', 'filters': filters.map(_filterToJson).toList()};
-      case OrGroup(filters: final filters):
-        return {'type': 'or', 'filters': filters.map(_filterToJson).toList()};
-      case NotGroup(filter: final filter):
-        return {'type': 'not', 'filter': _filterToJson(filter)};
-      case ObjectFilter():
-        throw UnimplementedError();
+  static Map<String, dynamic> _filterToJson(FilterOperation filter) {
+    if (filter is FilterCondition) {
+      return {
+        'type': filter.type.index,
+        'property': filter.property,
+        'value1': filter.value1,
+        'value2': filter.value2,
+        'include1': filter.include1,
+        'include2': filter.include2,
+        'caseSensitive': filter.caseSensitive,
+      };
+    } else if (filter is FilterGroup) {
+      return {
+        'type': filter.type.index,
+        'filters': filter.filters.map(_filterToJson).toList(),
+      };
+    } else {
+      throw UnimplementedError();
     }
   }
 
-  IsarQuery<dynamic> toQuery(Isar isar) {
-    final colIndex = isar.schemas.indexWhere((e) => e.name == this.collection);
-    final collection = isar.collectionByIndex<dynamic, dynamic>(colIndex);
+  Query<dynamic> toQuery() {
+    final isar = Isar.getInstance(instance)!;
+    // ignore: invalid_use_of_protected_member
+    final collection = isar.getCollectionByNameInternal(this.collection)!;
+    WhereClause? whereClause;
+    var whereSort = Sort.asc;
+
+    SortProperty? sortProperty;
+    if (this.sortProperty != null) {
+      if (this.sortProperty == collection.schema.idName) {
+        whereClause = const IdWhereClause.any();
+        whereSort = sortAsc == true ? Sort.asc : Sort.desc;
+      } else {
+        sortProperty = SortProperty(
+          property: this.sortProperty!,
+          sort: sortAsc == true ? Sort.asc : Sort.desc,
+        );
+      }
+    }
     return collection.buildQuery(
+      whereClauses: [if (whereClause != null) whereClause],
+      whereSort: whereSort,
       filter: filter,
-      sortBy: [
-        if (sortProperty != null)
-          SortProperty(
-            property: sortProperty!,
-            sort: sortAsc == true ? Sort.asc : Sort.desc,
-          ),
-      ],
+      offset: offset,
+      limit: limit,
+      sortBy: [if (sortProperty != null) sortProperty],
     );
   }
 }
 
-class ConnectEditPayload {
-  ConnectEditPayload({
+class ConnectEdit {
+  ConnectEdit({
     required this.instance,
     required this.collection,
     required this.id,
@@ -242,11 +156,11 @@ class ConnectEditPayload {
     required this.value,
   });
 
-  factory ConnectEditPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectEditPayload(
+  factory ConnectEdit.fromJson(Map<String, dynamic> json) {
+    return ConnectEdit(
       instance: json['instance'] as String,
       collection: json['collection'] as String,
-      id: json['id'],
+      id: json['id'] as Id,
       path: json['path'] as String,
       value: json['value'],
     );
@@ -254,7 +168,7 @@ class ConnectEditPayload {
 
   final String instance;
   final String collection;
-  final dynamic id;
+  final Id id;
   final String path;
   final dynamic value;
 
@@ -269,16 +183,16 @@ class ConnectEditPayload {
   }
 }
 
-class ConnectCollectionInfoPayload {
-  ConnectCollectionInfoPayload({
+class ConnectCollectionInfo {
+  ConnectCollectionInfo({
     required this.instance,
     required this.collection,
     required this.size,
     required this.count,
   });
 
-  factory ConnectCollectionInfoPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectCollectionInfoPayload(
+  factory ConnectCollectionInfo.fromJson(Map<String, dynamic> json) {
+    return ConnectCollectionInfo(
       instance: json['instance'] as String,
       collection: json['collection'] as String,
       size: json['size'] as int,
@@ -295,38 +209,6 @@ class ConnectCollectionInfoPayload {
       'instance': instance,
       'collection': collection,
       'size': size,
-      'count': count,
-    };
-  }
-}
-
-class ConnectObjectsPayload {
-  ConnectObjectsPayload({
-    required this.instance,
-    required this.collection,
-    required this.objects,
-    int? count,
-  }) : count = count ?? objects.length;
-
-  factory ConnectObjectsPayload.fromJson(Map<String, dynamic> json) {
-    return ConnectObjectsPayload(
-      instance: json['instance'] as String,
-      collection: json['collection'] as String,
-      objects: (json['objects'] as List).cast<Map<String, dynamic>>(),
-      count: json['count'] as int,
-    );
-  }
-
-  final String instance;
-  final String collection;
-  final List<Map<String, dynamic>> objects;
-  final int count;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'instance': instance,
-      'collection': collection,
-      'objects': objects,
       'count': count,
     };
   }
