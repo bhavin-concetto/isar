@@ -13,12 +13,12 @@
     <img src="https://img.shields.io/github/actions/workflow/status/isar/isar/test.yaml?branch=main&label=tests&labelColor=333940&logo=github">
   </a>
   <a href="https://app.codecov.io/gh/isar/isar">
-    <img src="https://img.shields.io/codecov/c/github/isar/isar?logo=codecov&logoColor=fff&labelColor=333940&flag=isar">
+    <img src="https://img.shields.io/codecov/c/github/isar/isar?logo=codecov&logoColor=fff&labelColor=333940">
   </a>
   <a href="https://t.me/isardb">
-    <img src="https://img.shields.io/static/v1?label=join&message=Isar%20%26%20Hive&labelColor=333940&logo=telegram&logoColor=white&color=229ED9">
+    <img src="https://img.shields.io/static/v1?label=join&message=isardb&labelColor=333940&logo=telegram&logoColor=white&color=229ED9">
   </a>
-  <a href="https://twitter.com/simcdev">
+  <a href="https://twitter.com/simonleier">
     <img src="https://img.shields.io/twitter/follow/simcdev?style=social">
   </a>
 </p>
@@ -35,9 +35,6 @@
 >
 > 1. River in Bavaria, Germany.
 > 2. [Crazy fast](#benchmarks) NoSQL database that is a joy to use.
-
-⚠️ ISAR V4 IS NOT READY FOR PRODUCTION USE ⚠️  
-If you want to use Isar in production, please use the stable version 3.
 
 ## Features
 
@@ -66,11 +63,27 @@ Holy smokes you're here! Let's get started on using the coolest Flutter database
 ### 1. Add to pubspec.yaml
 
 ```yaml
+isar_version: &isar_version 3.1.0 # define the version to be used
+
 dependencies:
-  isar: 4.0.0
-  isar_flutter_libs: 4.0.0 # contains Isar Core
+  isar:
+    git:
+      url: https://github.com/onguc/isar.git
+      path: packages/isar
+      ref: isar_3.1.0+2
+  isar_flutter_libs: # contains Isar Core
+    git:
+      url: https://github.com/onguc/isar.git
+      path: packages/isar_flutter_libs
+      ref: isar_3.1.0+2
+
 
 dev_dependencies:
+  isar_generator:
+    git:
+      url: https://github.com/onguc/isar.git
+      path: packages/isar_generator
+      ref: isar_3.1.0+2
   build_runner: any
 ```
 
@@ -81,21 +94,15 @@ part 'email.g.dart';
 
 @collection
 class Email {
-  Email({
-    this.id,
-    this.title,
-    this.recipients,
-    this.status = Status.pending,
-  });
-
-  final int id;
+  Id id = Isar.autoIncrement; // you can also use id = null to auto increment
 
   @Index(type: IndexType.value)
-  final String? title;
+  String? title;
 
-  final List<Recipient>? recipients;
+  List<Recipient>? recipients;
 
-  final Status status;
+  @enumerated
+  Status status = Status.pending;
 }
 
 @embedded
@@ -125,7 +132,7 @@ final isar = await Isar.open(
 ### 4. Query the database
 
 ```dart
-final emails = isar.emails.where()
+final emails = await isar.emails.filter()
   .titleContains('awesome', caseSensitive: false)
   .sortByStatusDesc()
   .limit(10)
@@ -147,14 +154,14 @@ All basic crud operations are available via the `IsarCollection`.
 ```dart
 final newEmail = Email()..title = 'Amazing new database';
 
-await isar.writeAsync(() {
-  isar.emails.put(newEmail); // insert & update
+await isar.writeTxn(() {
+  await isar.emails.put(newEmail); // insert & update
 });
 
-final existingEmail = isar.emails.get(newEmail.id!); // get
+final existingEmail = await isar.emails.get(newEmail.id!); // get
 
-await isar.writeAsync(() {
-  isar.emails.delete(existingEmail.id!); // delete
+await isar.writeTxn(() {
+  await isar.emails.delete(existingEmail.id!); // delete
 });
 ```
 
@@ -179,7 +186,7 @@ final specificEmails = isar.emails
 
 ## Database Watchers
 
-With Isar database, you can watch collections, objects, or queries. A watcher is notified after a transaction commits successfully and the target changes.
+With Isar database, you can watch collections, objects, or queries. A watcher is notified after a transaction commits successfully and the target actually changes.
 Watchers can be lazy and not reload the data or they can be non-lazy and fetch new results in the background.
 
 ```dart
@@ -198,7 +205,7 @@ Benchmarks only give a rough idea of the performance of a database but as you ca
 
 | <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/insert.png" width="100%" /> | <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/query.png" width="100%" /> |
 | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/update.png" width="100%" /> | <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/size.png" width="100%" />  |
+| <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/delete.png" width="100%" /> | <img src="https://raw.githubusercontent.com/isar/isar/main/.github/assets/benchmarks/size.png" width="100%" />  |
 
 If you are interested in more benchmarks or want to check how Isar performs on your device you can run the [benchmarks](https://github.com/isar/isar_benchmark) yourself.
 
@@ -239,14 +246,11 @@ Big thanks go to these wonderful people:
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/inkomomutane"><img src="https://avatars.githubusercontent.com/u/57417802?v=4" width="100px;" alt=""/><br /><sub><b>Nelson  Mutane</b></sub></a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/oscarpalomar"><img src="https://avatars.githubusercontent.com/u/13899772?v=4" width="100px;" alt=""/><br /><sub><b>Oscar Palomar</b></sub></a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Viper-Bit"><img src="https://avatars.githubusercontent.com/u/24822764?v=4" width="100px;" alt=""/><br /><sub><b>Peyman</b></sub></a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/leisim"><img src="https://avatars.githubusercontent.com/u/13610195?v=4" width="100px;" alt=""/><br /><sub><b>Simon Choi</b></sub></a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/leisim"><img src="https://avatars.githubusercontent.com/u/13610195?v=4" width="100px;" alt=""/><br /><sub><b>Simon Leier</b></sub></a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ika020202"><img src="https://avatars.githubusercontent.com/u/42883378?v=4" width="100px;" alt=""/><br /><sub><b>Ura</b></sub></a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/blendthink"><img src="https://avatars.githubusercontent.com/u/32213113?v=4" width="100px;" alt=""/><br /><sub><b>blendthink</b></sub></a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/mnkeis"><img src="https://avatars.githubusercontent.com/u/41247357?v=4" width="100px;" alt=""/><br /><sub><b>mnkeis</b></sub></a></td>
-    </tr>
-    <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nobkd"><img src="https://avatars.githubusercontent.com/u/44443899?v=4" width="100px;" alt=""/><br /><sub><b>nobkd</b></sub></a></td>
     </tr>
   </tbody>
@@ -260,7 +264,7 @@ Big thanks go to these wonderful people:
 ### License
 
 ```
-Copyright 2023 Simon Choi
+Copyright 2022 Simon Leier
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

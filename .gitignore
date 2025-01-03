@@ -22,6 +22,7 @@ target/
 *.wasm
 *.zip
 *.xcframework/
+!packages/isar_flutter_libs/ios/isar.xcframework/
 isar-dart.h
 
 # Android related
@@ -65,7 +66,7 @@ local.properties
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/ephemeral
 **/.plugin_symlinks/
-
+/examples/test_gradle_8
 # Coverage
 *.info
 *.profraw

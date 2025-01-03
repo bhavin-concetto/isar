@@ -128,12 +128,12 @@ class SearchResult extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: theme.textTheme.titleLarge),
+                Text(name, style: theme.textTheme.titleSmall),
                 if (package?.description != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     package!.description!,
-                    style: theme.textTheme.bodyMedium!.copyWith(fontSize: 13),
+                    style: theme.textTheme.bodySmall!.copyWith(fontSize: 13),
                     maxLines: 4,
                   ),
                 ],
