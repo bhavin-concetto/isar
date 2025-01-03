@@ -11,7 +11,8 @@ workspace:
   - packages/isar_test
   - examples/pub
 
-#dependency_overrides:
+dependency_overrides:
+  source_gen: 2.0.0
 #  isar:
 #    path: packages/isar
 #  isar_flutter_libs:
