@@ -2,6 +2,7 @@
 
 import 'dart:typed_data';
 
+import 'package:isar/isar.dart';
 import 'package:isar/src/web/web.dart';
 
 typedef Pointer<T> = int;
@@ -12,7 +13,7 @@ class NativeType {}
 Pointer<T> ptrFromAddress<T>(int addr) => addr;
 
 // ignore: unnecessary_late
-late final JSIsar b = IsarCoreBindings as JSIsar;
+late final JSIsar b = IsarCore.b as JSIsar;
 
 extension PointerX on int {
   @tryInline

@@ -1,4 +1,5 @@
 @TestOn('vm')
+library;
 
 import 'dart:isolate';
 
@@ -10,12 +11,12 @@ part 'isolate_test.g.dart';
 
 @collection
 class TestModel {
-  Id? id;
+  @Id()
+  late int id;
 
   String? value;
 
   @override
-  // ignore: hash_and_equals
   bool operator ==(Object other) {
     return other is TestModel && other.id == id && other.value == value;
   }
@@ -31,45 +32,35 @@ final TestModel _obj3 = TestModel()
   ..id = 3
   ..value = 'Model 3';
 
-Future<void> _isolateFunc(SendPort port) async {
-  final isar = await openTempIsar(
-    [TestModelSchema],
-    name: 'test',
-    directory: '',
-  );
-
-  final current = isar.testModels.where().findAllSync();
-  assert(current[0] == _obj1 && current[1] == _obj2, 'Did not find objects');
-
-  isar.writeTxnSync(() {
-    isar.testModels.deleteSync(2);
-    isar.testModels.putSync(_obj3);
-  });
-
-  assert(!(await isar.close()), 'Instance was closed incorrectly');
-
-  port.send(true);
-}
-
 void main() {
   isarTest('Isolate test', () async {
-    final isar = await openTempIsar([TestModelSchema], name: 'test');
+    final name = getRandomName();
+    final isar = await openTempIsar([TestModelSchema], name: name);
 
-    await isar.tWriteTxn(() async {
-      await isar.testModels.tPutAll([_obj1, _obj2]);
+    isar.write((isar) {
+      isar.testModels.putAll([_obj1, _obj2]);
     });
 
-    final port = ReceivePort();
-    await Isolate.spawn(
-      _isolateFunc,
-      port.sendPort,
-      onError: port.sendPort,
-    );
-    final result = await port.first;
-    expect(result, true);
+    await Isolate.run(() async {
+      await prepareTest();
 
-    await qEqual(isar.testModels.where(), [_obj1, _obj3]);
+      final isar = Isar.get(schemas: [TestModelSchema], name: name);
 
-    expect(await isar.close(deleteFromDisk: true), true);
+      final current = isar.testModels.where().findAll();
+      assert(
+        current[0] == _obj1 && current[1] == _obj2,
+        'Did not find objects',
+      );
+
+      isar.write((isar) {
+        isar.testModels.delete(2);
+        isar.testModels.put(_obj3);
+      });
+
+      assert(!isar.close(), 'Instance was closed incorrectly');
+    });
+
+    expect(isar.testModels.where().findAll(), [_obj1, _obj3]);
+    expect(isar.close(deleteFromDisk: true), true);
   });
 }

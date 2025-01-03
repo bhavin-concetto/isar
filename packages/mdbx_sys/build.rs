@@ -50,11 +50,12 @@ impl ParseCallbacks for Callbacks {
 }
 
 const LIBMDBX_REPO: &str = "https://github.com/isar/libmdbx.git";
-const LIBMDBX_TAG: &str = "v0.12.4";
+const LIBMDBX_TAG: &str = "v0.12.10";
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    env::set_var("IPHONEOS_DEPLOYMENT_TARGET", "11.0");
+    env::set_var("IPHONEOS_DEPLOYMENT_TARGET", "12.0");
+    env::set_var("RUST_BACKTRACE", "full");
 
     let is_android = env::var("CARGO_CFG_TARGET_OS").unwrap() == "android";
 
@@ -104,13 +105,12 @@ fn main() {
         .allowlist_function("^(MDBX|mdbx)_.*")
         .rustified_enum("^(MDBX_option_t|MDBX_cursor_op)")
         .size_t_is_usize(false)
-        .ctypes_prefix("::libc")
+        .ctypes_prefix("std::ffi")
         .parse_callbacks(Box::new(Callbacks))
         .layout_tests(false)
         .prepend_enum_name(false)
         .generate_comments(true)
         .disable_header_comment()
-        .rustfmt_bindings(true)
         .generate()
         .expect("Unable to generate bindings");
 

@@ -6,15 +6,15 @@ import 'package:isar_inspector/connect_client.dart';
 
 class CollectionsList extends StatelessWidget {
   const CollectionsList({
-    super.key,
     required this.collections,
     required this.collectionInfo,
     required this.selectedCollection,
     required this.onSelected,
+    super.key,
   });
 
-  final List<CollectionSchema<dynamic>> collections;
-  final Map<String, ConnectCollectionInfo?> collectionInfo;
+  final List<IsarSchema> collections;
+  final Map<String, ConnectCollectionInfoPayload?> collectionInfo;
   final String? selectedCollection;
   final void Function(String collection) onSelected;
 

@@ -7,23 +7,18 @@ part 'name_test.g.dart';
 @collection
 @Name('NameModelN')
 class NameModel {
+  NameModel(this.id);
+
   @Name('idN')
-  Id? id;
+  int id;
 
   @Index()
   @Name('valueN')
   String? value;
 
-  @Index(composite: [CompositeIndex('value')])
+  //@Index(composite: [CompositeIndex('value')])
   @Name('otherValueN')
   String? otherValue;
-
-  @Name('linkN')
-  IsarLinks<NameModel> link = IsarLinks<NameModel>();
-
-  @Backlink(to: 'link')
-  @Name('backlink')
-  IsarLinks<NameModel> backlink = IsarLinks<NameModel>();
 }
 
 void main() {
@@ -34,16 +29,16 @@ void main() {
       isar = await openTempIsar([NameModelSchema]);
     });
 
-    isarTest('json', () async {
-      await isar.tWriteTxn(
-        () => isar.nameModels.tPut(
-          NameModel()
+    isarTest('json', () {
+      isar.write(
+        (isar) => isar.nameModels.put(
+          NameModel(1)
             ..value = 'test'
             ..otherValue = 'test2',
         ),
       );
 
-      expect(await isar.nameModels.where().exportJson(), [
+      expect(isar.nameModels.where().exportJson(), [
         {
           'idN': 1,
           'valueN': 'test',
