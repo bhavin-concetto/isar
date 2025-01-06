@@ -1,5 +1,4 @@
 [workspace]
-resolver = "2"
 members = [
     "packages/isar_core",
     "packages/isar_core_ffi",

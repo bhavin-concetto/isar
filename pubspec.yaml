@@ -3,16 +3,21 @@ publish_to: none
 
 environment:
   sdk: ^3.6.0
-workspace:
-  - packages/isar
-  - packages/isar_flutter_libs
-  - packages/isar_generator
-  - packages/isar_inspector
-  - packages/isar_test
-  - examples/pub
+
+dev_dependencies:
+  melos: any
+#workspace:
+#  - packages/isar
+#  - packages/isar_flutter_libs
+##  - packages/isar_generator
+#  - packages/isar_inspector
+#  - packages/isar_test
+#  - examples/pub
 
 dependency_overrides:
-  source_gen: 2.0.0
+  source_gen: ^2.0.0
+  analyzer: ^7.1.0
+  dart_style: ^3.0.1
 #  isar:
 #    path: packages/isar
 #  isar_flutter_libs:

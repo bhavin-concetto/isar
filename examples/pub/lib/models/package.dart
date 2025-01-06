@@ -129,7 +129,7 @@ class Package {
     );
   }
 
-  Package? copyWithMetrics(ApiPackageMetrics metrics) {
+  Package copyWithMetrics(ApiPackageMetrics metrics) {
     final publishers =
         metrics.tags.where((t) => t.startsWith('publisher:')).toList();
     final publisher =

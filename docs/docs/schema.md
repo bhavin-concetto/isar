@@ -124,7 +124,6 @@ Isar supports the following data types:
 - `float`
 - `double`
 - `DateTime`
-- `Duration`
 - `String`
 - `List<bool>`
 - `List<byte>`
@@ -133,7 +132,6 @@ Isar supports the following data types:
 - `List<float>`
 - `List<double>`
 - `List<DateTime>`
-- `List<Duration>`
 - `List<String>`
 
 Additionally, embedded objects and enums are supported. We'll cover those below.
@@ -197,10 +195,6 @@ The `byte` type does not support null values.
 Isar does not store timezone information of your dates. Instead, it converts `DateTime`s to UTC before storing them. Isar returns all dates in local time.
 
 `DateTime`s are stored with microsecond precision. In browsers, only millisecond precision is supported because of JavaScript limitations.
-
-## Duration
-
-Durations are stored in millisecond precision.
 
 ## Enum
 
