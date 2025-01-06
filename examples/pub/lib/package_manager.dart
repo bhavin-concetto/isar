@@ -162,8 +162,9 @@ class PackageManager {
     }
   }
 
-  Future<void> loadPackageAssets(String name, String version) {
-    return compute(loadAssets, PackageAndVersion(name, version));
+  Future<void> loadPackageAssets(String name, String version, Isar isar) async {
+    // return compute(loadAssets, PackageAndVersion(name, version));
+    await loadAssets(PackageAndVersion(name, version), isar);
   }
 
   Future<List<String>> search(String query, int page, {bool online = true}) {

@@ -16,57 +16,56 @@ class PackageAndVersion {
   final String version;
 }
 
-Future<void> loadAssets(PackageAndVersion p) async {
-  final dir = await getApplicationDocumentsDirectory();
+  Future<void> loadAssets(PackageAndVersion p, Isar isar) async {
+    final dir = await getApplicationDocumentsDirectory();
+  isar ??= Isar.openSync(
+      [PackageSchema, AssetSchema],
+      inspector: false,
+      directory: dir.path,
+    );
 
-  final isar = Isar.openSync(
-    [PackageSchema, AssetSchema],
-    inspector: false,
-    directory: dir.path,
-  );
+    Asset? readme;
+    Asset? changelog;
 
-  Asset? readme;
-  Asset? changelog;
+    final targz = await Repository(Dio()).downloadPackage(p.package, p.version);
+    final tar = gzip.decode(targz);
 
-  final targz = await Repository(Dio()).downloadPackage(p.package, p.version);
-  final tar = gzip.decode(targz);
+    final reader = TarReader(Stream.value(tar));
+    while (await reader.moveNext()) {
+      final entry = reader.current;
 
-  final reader = TarReader(Stream.value(tar));
-  while (await reader.moveNext()) {
-    final entry = reader.current;
+      if (entry.type == TypeFlag.reg) {
+        if (readme == null && entry.name.toLowerCase() == 'readme.md') {
+          final content = await entry.contents.transform(utf8.decoder).join();
+          readme = Asset(
+            package: p.package,
+            version: p.version,
+            kind: AssetKind.readme,
+            content: content,
+          );
+        } else
+        if (changelog == null && entry.name.toLowerCase() == 'changelog.md') {
+          final content = await entry.contents.transform(utf8.decoder).join();
+          changelog = Asset(
+            package: p.package,
+            version: p.version,
+            kind: AssetKind.changelog,
+            content: content,
+          );
+        }
+      }
 
-    if (entry.type == TypeFlag.reg) {
-      if (readme == null && entry.name.toLowerCase() == 'readme.md') {
-        final content = await entry.contents.transform(utf8.decoder).join();
-        readme = Asset(
-          package: p.package,
-          version: p.version,
-          kind: AssetKind.readme,
-          content: content,
-        );
-      } else if (changelog == null &&
-          entry.name.toLowerCase() == 'changelog.md') {
-        final content = await entry.contents.transform(utf8.decoder).join();
-        changelog = Asset(
-          package: p.package,
-          version: p.version,
-          kind: AssetKind.changelog,
-          content: content,
-        );
+      if (readme != null && changelog != null) {
+        break;
       }
     }
 
-    if (readme != null && changelog != null) {
-      break;
+    if (readme != null || changelog != null) {
+      isar?.writeTxnSync(() {
+        isar?.assets.putAllSync([
+          if (readme != null) readme,
+          if (changelog != null) changelog,
+        ]);
+      });
     }
   }
-
-  if (readme != null || changelog != null) {
-    isar.writeTxnSync(() {
-      isar.assets.putAllSync([
-        if (readme != null) readme,
-        if (changelog != null) changelog,
-      ]);
-    });
-  }
-}

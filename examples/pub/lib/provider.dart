@@ -67,7 +67,7 @@ final assetsPod =
     StreamProvider.family<Map<AssetKind, String>, PackageNameVersion>(
         (ref, package) async* {
   final manager = await ref.watch(packageManagerPod.future);
-  unawaited(manager.loadPackageAssets(package.name, package.version!));
+  unawaited(manager.loadPackageAssets(package.name, package.version!, manager.isar));
   yield* manager.watchPackageAssets(package.name, package.version!);
 });
 
