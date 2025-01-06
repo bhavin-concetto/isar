@@ -13,7 +13,8 @@ dependencies:
   integration_test:
     sdk: flutter
   intl: 0.18.0
-  isar: any
+  isar:
+    path: ../isar
   isar_flutter_libs:
     path: ../isar_flutter_libs
   json_annotation: ^4.7.0
