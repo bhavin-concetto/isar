@@ -6,21 +6,37 @@ on:
       - "*"
 
 jobs:
+  verify_version:
+    name: Verify version matches release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
+      - name: Verify release version
+        run: |
+          dart pub get
+          dart tool/verify_release_version.dart ${{ github.ref_name }}
+        working-directory: packages/isar
+
   build_binaries:
     name: Build Binaries
+    needs: verify_version
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: ubuntu-latest
             artifact_name: libisar_android_arm64.so
             script: build_android.sh
-          - os: macos-latest
+          - os: ubuntu-latest
             artifact_name: libisar_android_armv7.so
             script: build_android.sh armv7
-          - os: macos-latest
+          - os: ubuntu-latest
             artifact_name: libisar_android_x64.so
             script: build_android.sh x64
+          - os: ubuntu-latest
+            artifact_name: libisar_android_x86.so
+            script: build_android.sh x86
           - os: macos-latest
             artifact_name: isar_ios.xcframework.zip
             script: build_ios.sh
@@ -31,11 +47,11 @@ jobs:
             artifact_name: libisar_macos.dylib
             script: build_macos.sh
           - os: windows-latest
+            artifact_name: isar_windows_arm64.dll
+            script: build_windows.sh
+          - os: windows-latest
             artifact_name: isar_windows_x64.dll
             script: build_windows.sh x64
-          - os: ubuntu-latest
-            artifact_name: isar.wasm
-            script: build_wasm.sh
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -86,36 +102,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-      - name: Wait for tests to succeed
-        uses: lewagon/wait-on-check-action@v1.3.1
-        with:
-          ref: ${{ github.ref }}
-          running-workflow-name: "Publish"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-      - name: Set Isar Version
-        run: echo "ISAR_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+      - name: pub get
+        run: dart pub get
+        working-directory: packages/isar
       - name: Download Binaries
         run: sh tool/download_binaries.sh
-      - name: Adjust Version
-        run: find . -type f -exec sed -i "s/0.0.0-placeholder/${{ github.ref_name }}/g" {} +
       - name: pub.dev credentials
         run: |
           mkdir -p $HOME/.config/dart
           echo '${{ secrets.PUB_JSON }}' >> $HOME/.config/dart/pub-credentials.json
-      - uses: JS-DevTools/npm-publish@v2
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
       - name: Publish isar
-        run: |
-          dart pub get
-          dart pub publish --force
+        run: dart pub publish --force
         working-directory: packages/isar
+      - name: Publish isar_generator
+        run: dart pub publish --force
+        working-directory: packages/isar_generator
       - name: Publish isar_flutter_libs
-        run: |
-          flutter pub get
-          flutter pub publish --force
+        run: dart pub publish --force
         working-directory: packages/isar_flutter_libs
