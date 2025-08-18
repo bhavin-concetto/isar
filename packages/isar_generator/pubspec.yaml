@@ -15,8 +15,7 @@ dependencies:
   dartx: ^1.1.0
   glob: ^2.0.2
   analyzer: ^6.11.0
-  isar:
-    path: ../isar
+  isar: ^3.1.0+1
   path: ^1.9.0
   source_gen: ^2.0.0
   xxh3: ^1.2.0
